@@ -3,6 +3,11 @@ package org.hlopes.resource;
 import java.net.URI;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.hlopes.catalog.CatalogService;
+import org.hlopes.config.ApplicationConfig;
+import org.hlopes.repository.LibraryEntryRepository;
+import org.hlopes.repository.UserRepository;
+import org.hlopes.service.LibraryService;
 
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
@@ -34,6 +39,29 @@ public class PageResource {
     @Inject
     @Location("auth/verification-sent")
     Template auth_verification_sent;
+
+    @Inject
+    @Location("catalog/detail")
+    Template catalog_detail;
+
+    @Inject
+    @Location("wishlist")
+    Template wishlist;
+
+    @Inject
+    CatalogService catalogService;
+
+    @Inject
+    ApplicationConfig applicationConfig;
+
+    @Inject
+    UserRepository userRepository;
+
+    @Inject
+    LibraryEntryRepository libraryEntryRepository;
+
+    @Inject
+    LibraryService libraryService;
 
     @Inject
     JsonWebToken jwt;
@@ -114,5 +142,96 @@ public class PageResource {
                 .data("resendMessage", message)
                 .data("resendError", error)
                 .data("currentUser", null);
+    }
+
+    @GET
+    @Path("media/{type}/{id}")
+    @PermitAll
+    public Response getMediaDetail(@PathParam("type") String type, @PathParam("id") Long id) {
+        try {
+            String email = jwt != null ? jwt.getSubject() : null;
+
+            if (email == null || email.isBlank()) {
+                throw new NotAuthorizedException("Not logged in");
+            }
+
+            var detail = catalogService.detail(type, id);
+            var user = userRepository.findByEmail(email).orElse(null);
+            boolean alreadyInWishlist = false;
+
+            if (user != null) {
+                alreadyInWishlist = libraryEntryRepository.existsByUserIdAndMediaItemId(
+                        user.id, detail.mediaItem().id());
+            }
+
+            String imageBase = applicationConfig.tmdb().imageBaseUrl();
+            String posterUrl = detail.mediaItem().posterPath() != null
+                    ? imageBase + "/w500" + detail.mediaItem().posterPath()
+                    : null;
+            String backdropUrl = detail.mediaItem().backdropPath() != null
+                    ? imageBase + "/w1280" + detail.mediaItem().backdropPath()
+                    : null;
+
+            TemplateInstance instance = catalog_detail
+                    .data("mediaItem", detail.mediaItem())
+                    .data("cast", detail.credits().cast())
+                    .data("director", detail.credits().director())
+                    .data("posterUrl", posterUrl)
+                    .data("backdropUrl", backdropUrl)
+                    .data("alreadyInWishlist", alreadyInWishlist)
+                    .data("currentUser", email);
+
+            return Response.ok(instance).build();
+
+        } catch (NotAuthorizedException e) {
+            String msg =
+                    java.net.URLEncoder.encode("Please login to view media", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/login?error=" + msg)).build();
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (jakarta.ws.rs.WebApplicationException e) {
+            if (e.getResponse().getStatus() == 404) {
+                throw new NotFoundException("Media not found");
+            }
+
+            throw e;
+        } catch (Exception e) {
+            String msg = java.net.URLEncoder.encode("Media not found", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/app?error=" + msg)).build();
+        }
+    }
+
+    @GET
+    @Path("wishlist")
+    @PermitAll
+    public Response getWishlist(
+            @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("20") int size) {
+        try {
+            String email = jwt != null ? jwt.getSubject() : null;
+
+            if (email == null || email.isBlank()) {
+                throw new NotAuthorizedException("Not logged in");
+            }
+
+            var entries = libraryService.list(email, "WISHLIST", page, size);
+            long total = libraryService.count(email, "WISHLIST");
+
+            TemplateInstance instance =
+                    wishlist.data("entries", entries).data("total", total).data("currentUser", email);
+
+            return Response.ok(instance).build();
+
+        } catch (NotAuthorizedException e) {
+            String msg = java.net.URLEncoder.encode(
+                    "Please login to view wishlist", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/login?error=" + msg)).build();
+        } catch (Exception e) {
+            String msg = java.net.URLEncoder.encode("Failed to load wishlist", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/app?error=" + msg)).build();
+        }
     }
 }

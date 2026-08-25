@@ -1,0 +1,3 @@
+# Wishlist as filtered Library Entry with lazy-cached MediaItem
+
+Phase 2's "Backlog" is not a new aggregate but the `WISHLIST` view of `Library Entry` (`user_id, media_item_id, status`), and `MediaItem` is a lazy-cached snapshot of the Catalog (`externalId, mediaType` unique) created on first detail/add. Search fetches live from TMDB without persisting; detail fetches `movie|tv/{id}` + `credits` and materializes the snapshot, while cast/director are returned with the detail but not stored long-term. Hard-delete on `DELETE /api/me/library/{id}` keeps phase 2 simple; persisting every catalog result upfront or storing only an external id was rejected for write amplification and slow backlog reads.

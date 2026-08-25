@@ -1,0 +1,44 @@
+{#include base.html}
+{#title}Wishlist{/title}
+{#body}
+<div class="max-w-3xl mx-auto space-y-4">
+    <div class="flex items-center justify-between">
+        <h1 class="text-lg font-semibold tracking-tight">Wishlist</h1>
+        <span class="text-xs font-mono border border-zinc-200 px-2 py-1 rounded-sm">{total} items</span>
+    </div>
+    {#if entries.isEmpty}
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center">
+        <p class="text-sm text-zinc-600">Your Wishlist is empty — search above in <a href="/app" class="underline">/app</a>.</p>
+    </div>
+    {#else}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {#for entry in entries}
+        <div class="bg-white border border-zinc-200 rounded-sm shadow-sm overflow-hidden flex gap-3 p-3">
+            {#if entry.mediaItem.posterPath}
+            <img src="https://image.tmdb.org/t/p/w185{entry.mediaItem.posterPath}" alt="{entry.mediaItem.title}" class="h-20 w-14 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />
+            {#else}
+            <div class="h-20 w-14 bg-zinc-100 border border-zinc-200 rounded-sm flex-shrink-0"></div>
+            {/if}
+            <div class="min-w-0 flex-1">
+                <div class="text-sm font-medium truncate"><a href="/media/{#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}/{entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a></div>
+                <div class="text-xs font-mono text-zinc-500">{entry.mediaItem.mediaType}{#if entry.mediaItem.releaseDate} · {entry.mediaItem.releaseDate}{/if}</div>
+                <div class="text-xs font-mono text-zinc-400 mt-1">added {entry.createdAt}</div>
+                <button data-entry-id="{entry.id}" class="remove-btn mt-2 text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
+            </div>
+        </div>
+        {/for}
+    </div>
+    {/if}
+</div>
+<script>
+document.querySelectorAll('.remove-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!confirm('Remove from Wishlist?')) return;
+    const id = btn.getAttribute('data-entry-id');
+    fetch('/api/me/library/' + id, { method: 'DELETE', credentials: 'include' })
+      .then(r => { if (r.status === 204) window.location.reload(); else return r.json().then(j=> alert(j.error||'Failed')); })
+      .catch(()=> alert('Failed'));
+  });
+});
+</script>
+{/include}

@@ -1,5 +1,7 @@
 package org.hlopes.config;
 
+import java.time.Duration;
+
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -9,6 +11,8 @@ public interface ApplicationConfig {
     Verification verification();
 
     Jwt jwt();
+
+    Tmdb tmdb();
 
     interface Verification {
 
@@ -26,5 +30,20 @@ public interface ApplicationConfig {
 
         @WithDefault("3600")
         long lifespan();
+    }
+
+    interface Tmdb {
+
+        @WithDefault("")
+        String apiKey();
+
+        @WithDefault("https://api.themoviedb.org/3")
+        String baseUrl();
+
+        @WithDefault("https://image.tmdb.org/t/p")
+        String imageBaseUrl();
+
+        @WithDefault("3S")
+        Duration timeout();
     }
 }

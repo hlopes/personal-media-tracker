@@ -1,0 +1,3 @@
+# TMDB as Catalog via server-side proxy
+
+Phase 2 needs a free searchable catalog for Movies and TV Series to populate the Wishlist. We chose TMDB (`api.themoviedb.org/3`) proxied server-side through a Quarkus REST Client (`mediashelf.tmdb.*` in `ApplicationConfig`) instead of a browser-direct call, keeping `TMDB_API_KEY` in `application.properties`/env and enabling caching, rate-limit handling and auth gating. This keeps credentials out of the browser and lets us merge `search/multi` results for a single `GET /api/catalog/search` surface; alternatives (OMDb, direct browser) were rejected for key exposure and weaker TV data.

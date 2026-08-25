@@ -11,6 +11,17 @@
         </div>
     </div>
 
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-6">
+        <h2 class="text-sm font-semibold">Search Catalog</h2>
+        <p class="mt-1 text-xs text-zinc-500">Movies and TV series via TMDB (min 2 characters)</p>
+        <div class="relative mt-3">
+            <input id="catalog-search" type="text" placeholder="Search matrix, breaking bad…" autocomplete="off"
+                class="w-full border border-zinc-200 rounded-sm px-3 py-2 text-sm font-sans placeholder:text-zinc-400 focus:border-zinc-300 focus:ring-0" />
+            <div id="catalog-dropdown" class="hidden absolute z-10 mt-1 w-full bg-white border border-zinc-200 rounded-sm shadow-sm max-h-80 overflow-auto"></div>
+        </div>
+        <p id="catalog-hint" class="mt-2 text-xs font-mono text-zinc-500"></p>
+    </div>
+
     <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-0 overflow-hidden">
         <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
             <h2 class="text-sm font-semibold">Library</h2>
@@ -24,4 +35,74 @@
         </div>
     </div>
 </div>
+<script>
+(function() {
+    const input = document.getElementById('catalog-search');
+    const dropdown = document.getElementById('catalog-dropdown');
+    const hint = document.getElementById('catalog-hint');
+    let debounce = null;
+    let selected = -1;
+    let results = [];
+
+    function hide() {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+        selected = -1;
+    }
+
+    function render() {
+        if (!results.length) {
+            dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-500">No results for “' + input.value.trim() + '”</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+        dropdown.innerHTML = results.slice(0,5).map((r, i) => {
+            const year = r.releaseDate ? r.releaseDate.substring(0,4) : '';
+            const poster = r.posterPath ? 'https://image.tmdb.org/t/p/w185' + r.posterPath : '';
+            const active = i === selected ? ' bg-zinc-50' : '';
+            return '<a href="/media/' + r.mediaType.toLowerCase() + '/' + r.externalId + '" class="flex gap-3 px-3 py-2 border-b border-zinc-100 last:border-0 hover:bg-zinc-50' + active + '">'
+                + (poster ? '<img src="' + poster + '" alt="" class="h-12 w-8 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />' : '<div class="h-12 w-8 bg-zinc-100 border border-zinc-200 rounded-sm flex-shrink-0"></div>')
+                + '<div class="min-w-0"><div class="text-sm font-medium truncate">' + r.title + '</div><div class="text-xs font-mono text-zinc-500">' + r.mediaType + (year ? ' · ' + year : '') + '</div></div></a>';
+        }).join('');
+        dropdown.classList.remove('hidden');
+    }
+
+    function fetchSearch(q) {
+        hint.textContent = 'Searching…';
+        fetch('/api/catalog/search?q=' + encodeURIComponent(q), { credentials: 'include' })
+            .then(res => {
+                if (res.status === 400) { hint.textContent = 'Type at least 2 characters'; hide(); return null; }
+                if (res.status === 401) { hint.textContent = 'Please login'; hide(); return null; }
+                if (!res.ok) { hint.textContent = 'Catalog unavailable'; hide(); return null; }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                results = data.results || [];
+                hint.textContent = '';
+                render();
+            })
+            .catch(() => { hint.textContent = 'Catalog unavailable'; hide(); });
+    }
+
+    input.addEventListener('input', function() {
+        const q = input.value.trim();
+        if (debounce) clearTimeout(debounce);
+        if (q.length < 2) { hint.textContent = q.length ? 'Type at least 2 characters' : ''; hide(); return; }
+        debounce = setTimeout(() => fetchSearch(q), 300);
+    });
+
+    input.addEventListener('keydown', function(e) {
+        const count = Math.min(results.length, 5);
+        if (e.key === 'ArrowDown') { e.preventDefault(); selected = Math.min(selected + 1, count - 1); render(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); selected = Math.max(selected - 1, 0); render(); }
+        else if (e.key === 'Enter' && selected >= 0) { e.preventDefault(); const r = results[selected]; if (r) window.location.href = '/media/' + r.mediaType.toLowerCase() + '/' + r.externalId; }
+        else if (e.key === 'Escape') { hide(); }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) hide();
+    });
+})();
+</script>
 {/include}

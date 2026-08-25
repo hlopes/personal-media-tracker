@@ -16,14 +16,26 @@ _Avoid_: Login alone, session, token as synonym
 A step where a User proves control of their email address by following a one-time verification link/token sent to that address before gaining full access.
 _Avoid_: Email confirmation as separate concept, activation
 
-**MediaItem** _(stub - phase 2)_:
-A single trackable work — a Movie, TV Show, or Video Game — as catalogued by the system.
+**MediaItem**:
+A single trackable work — a Movie or TV Series — cached locally from an external Catalog, identified by `(externalId, mediaType)` and holding title, synopsis, poster/backdrop paths and release date. Video Game remains stub for phase 2.
 _Avoid_: Media, entry, title (overloaded)
 
-**Library Entry** _(stub - phase 2)_:
-The association between a User and a MediaItem, holding the User-specific state (status, rating, progress, notes).
-_Avoid_: Collection item, log, watchlist entry
+**MediaType**:
+The kind of a MediaItem: `MOVIE` or `TV_SERIES` (from TMDB `movie`/`tv`). Determines which title/date field is canonical.
+_Avoid_: Type alone, category
 
-**Status** _(stub - phase 2)_:
-The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`.
+**Library Entry**:
+The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `WISHLIST`.
+_Avoid_: Collection item, log, backlog entry
+
+**Status**:
+The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. Phase 2 uses `WISHLIST` only; removal hard-deletes the entry.
 _Avoid_: State, stage
+
+**Wishlist**:
+The filtered view of a User's Library Entries where `status = WISHLIST`. The UI term "Backlog" maps to this view.
+_Avoid_: Backlog as separate concept, watchlist
+
+**Catalog**:
+The external source of truth for searchable works (TMDB in phase 2), queried server-side via a proxied search and detail. The system never stores Catalog credentials in the browser.
+_Avoid_: Provider, API as domain term
