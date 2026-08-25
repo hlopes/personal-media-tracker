@@ -13,9 +13,12 @@ import jakarta.ws.rs.ext.Provider;
  * Bridges HttpOnly cookie `jwt` to `Authorization: Bearer` so SmallRye JWT + @RolesAllowed work for
  * Qute pages. Pure Tailwind pages POST form → AuthPageResource sets cookie; subsequent GET /app
  * sends cookie → filter injects header → JWT validated.
+ *
+ * <p>Fallback for setups without {@code mp.jwt.token.header=Cookie}; runs before SmallRye JWT auth
+ * at {@code AUTHENTICATION-1} so the header is present when auth is checked.
  */
 @Provider
-@Priority(Priorities.AUTHENTICATION)
+@Priority(Priorities.AUTHENTICATION - 1)
 public class JwtCookieFilter implements ContainerRequestFilter {
 
     private static final String COOKIE_NAME = "jwt";
@@ -28,6 +31,7 @@ public class JwtCookieFilter implements ContainerRequestFilter {
                 && !requestContext.getHeaderString(AUTH_HEADER).isBlank()) {
             return;
         }
+
         Cookie cookie = requestContext.getCookies().get(COOKIE_NAME);
 
         if (cookie != null && cookie.getValue() != null && !cookie.getValue().isBlank()) {

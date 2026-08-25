@@ -3,30 +3,32 @@ package org.hlopes.service;
 import java.time.Duration;
 import java.util.Set;
 
-import org.hlopes.config.ApplicationConfig;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class JwtService {
 
-    @Inject
-    ApplicationConfig applicationConfig;
+    @ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "mediashelf")
+    String issuer;
+
+    @ConfigProperty(name = "smallrye.jwt.new-token.lifespan", defaultValue = "3600")
+    long lifespanSeconds;
 
     public String generateToken(String email) {
-        return Jwt.issuer(applicationConfig.jwt().issuer())
+        return Jwt.issuer(issuer)
                 .subject(email)
                 .upn(email)
                 .groups(Set.of("User"))
                 .audience("mediashelf")
                 .claim("email", email)
-                .expiresIn(Duration.ofSeconds(applicationConfig.jwt().lifespan()))
+                .expiresIn(Duration.ofSeconds(lifespanSeconds))
                 .sign();
     }
 
     public long getLifespanSeconds() {
-        return applicationConfig.jwt().lifespan();
+        return lifespanSeconds;
     }
 }
