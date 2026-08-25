@@ -1,0 +1,3 @@
+# Qute + pure Tailwind CDN for auth pages
+
+Phase 0.2.0 adds server-rendered login/register (and verification) pages. We chose Qute with `quarkus-qute`/`quarkus-rest-qute` over a SPA because the app is SSR-first and the existing auth is JWT Bearer — Qute lets us reuse `AuthService` and keep JSON API untouched. For styling we chose pure Tailwind 4 via CDN (`https://cdn.tailwindcss.com` + Inter/JetBrains Mono, zinc palette, `rounded-sm`/`border`/`shadow-sm` only) over DaisyUI/Flowbite and over `quarkus-web-bundler`. Pure Tailwind keeps the look sharp (no gradients, no single-side borders, no `rounded-xl`) and avoids a Node build for the skeleton; `web-bundler` is deferred to 0.3.0 when tables/cards lists need bundling and purging.

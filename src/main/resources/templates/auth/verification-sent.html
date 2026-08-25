@@ -1,0 +1,42 @@
+{#include base.html}
+{#title}Check email{/title}
+{#body}
+<div class="max-w-md mx-auto">
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
+        <h1 class="text-lg font-semibold tracking-tight">Check your email</h1>
+        <p class="mt-2 text-sm text-zinc-600 leading-relaxed">
+            {#if email}
+                We sent a verification link to <span class="font-mono text-zinc-900 border border-zinc-200 px-1 rounded-sm">{email}</span>.
+            {#else}
+                We sent a verification link to your email.
+            {/if}
+            The link is valid for 24 hours and is single-use. In dev it is also logged to the server console and Mailpit at <span class="font-mono text-xs">http://localhost:1025</span> / <span class="font-mono text-xs">8025</span>.
+        </p>
+
+        <div class="mt-6 border border-zinc-200 bg-zinc-50 rounded-sm p-3">
+            <p class="text-xs font-mono text-zinc-700">Next: click the link in the email → then <a href="/login" class="underline text-zinc-900">login</a>.</p>
+            {#if email}
+            <p class="mt-1 text-xs text-zinc-500">Didn’t receive it? Check spam or request resend below.</p>
+            {/if}
+        </div>
+
+        <form method="post" action="/resend-verification" class="mt-6 flex gap-2">
+            <input type="hidden" name="email" value="{email ?: ''}">
+            <input type="email" name="email_display" value="{email ?: ''}" disabled placeholder="you@example.com"
+                   class="flex-1 border border-zinc-300 rounded-sm px-3 py-2 text-sm bg-zinc-100 text-zinc-500">
+            <button type="submit" class="px-4 py-2 bg-white border border-zinc-200 rounded-sm text-sm font-medium hover:bg-zinc-50">Resend</button>
+        </form>
+        {#if resendMessage}
+        <p class="mt-3 text-sm border border-zinc-200 bg-zinc-50 px-3 py-2 rounded-sm">{resendMessage}</p>
+        {/if}
+        {#if resendError}
+        <p class="mt-3 text-sm border border-zinc-900 bg-zinc-900 text-white px-3 py-2 rounded-sm">{resendError}</p>
+        {/if}
+
+        <div class="mt-6 flex gap-2">
+            <a href="/login" class="px-4 py-2 bg-zinc-900 text-white rounded-sm border border-zinc-900 text-sm font-medium hover:bg-zinc-800">Go to login</a>
+            <a href="/register" class="px-4 py-2 bg-white border border-zinc-200 rounded-sm text-sm font-medium hover:bg-zinc-50">Register another</a>
+        </div>
+    </div>
+</div>
+{/include}

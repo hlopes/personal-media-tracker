@@ -1,0 +1,39 @@
+{#include base.html}
+{#title}Register{/title}
+{#body}
+<div class="max-w-md mx-auto">
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm">
+        <div class="px-8 pt-8 pb-6">
+            <h1 class="text-lg font-semibold tracking-tight">Create account</h1>
+            <p class="mt-1 text-sm text-zinc-600">Email verification required before login.</p>
+        </div>
+
+        {#if error}
+        <div class="mx-8 mb-6 border border-zinc-900 bg-zinc-900 text-white text-sm px-3 py-2 rounded-sm">
+            {error}
+        </div>
+        {/if}
+
+        <form method="post" action="/register" class="px-8 pb-8 space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-zinc-700">Email</label>
+                <input id="email" name="email" type="email" required autocomplete="email" value="{email ?: ''}"
+                       placeholder="you@example.com"
+                       class="mt-1 block w-full border border-zinc-300 rounded-sm px-3 py-2 text-sm bg-white placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none">
+                <p class="mt-1 text-xs font-mono text-zinc-500">Lower-cased and unique. Verification link logged to server console in dev.</p>
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-zinc-700">Password</label>
+                <input id="password" name="password" type="password" required autocomplete="new-password"
+                       class="mt-1 block w-full border border-zinc-300 rounded-sm px-3 py-2 text-sm bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none">
+                <p class="mt-1 text-xs font-mono text-zinc-500">Min 8 characters, bcrypt cost 12.</p>
+            </div>
+            <button type="submit" class="w-full bg-zinc-900 text-white border border-zinc-900 rounded-sm px-4 py-2 text-sm font-medium hover:bg-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-900">Create account</button>
+        </form>
+
+        <div class="px-8 py-4 border-t border-zinc-200 bg-zinc-50 rounded-b-sm">
+            <p class="text-sm text-zinc-600">Already have an account? <a href="/login" class="font-medium text-zinc-900 underline hover:no-underline">Login</a></p>
+        </div>
+    </div>
+</div>
+{/include}

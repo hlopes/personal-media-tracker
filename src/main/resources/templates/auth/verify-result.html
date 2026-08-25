@@ -1,0 +1,29 @@
+{#include base.html}
+{#title}Verification{/title}
+{#body}
+<div class="max-w-md mx-auto">
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
+        {#if success}
+            <h1 class="text-lg font-semibold tracking-tight">Email verified</h1>
+            <p class="mt-2 text-sm text-zinc-600">Your email <span class="font-mono text-zinc-900">{email}</span> is now verified. You can log in.</p>
+            <div class="mt-6">
+                <a href="/login" class="inline-flex px-4 py-2 bg-zinc-900 text-white rounded-sm border border-zinc-900 text-sm font-medium hover:bg-zinc-800">Login</a>
+            </div>
+        {#else}
+            <h1 class="text-lg font-semibold tracking-tight">Verification failed</h1>
+            <p class="mt-2 text-sm border border-zinc-900 bg-zinc-900 text-white px-3 py-2 rounded-sm">{error}</p>
+            <p class="mt-4 text-sm text-zinc-600">The token may be invalid, already used, or expired (24h). Request a new link.</p>
+            <form method="post" action="/resend-verification" class="mt-4 flex gap-2">
+                <input type="email" name="email" placeholder="you@example.com" required
+                       class="flex-1 border border-zinc-300 rounded-sm px-3 py-2 text-sm bg-white placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 focus:outline-none">
+                <button type="submit" class="px-4 py-2 bg-white border border-zinc-200 rounded-sm text-sm font-medium hover:bg-zinc-50">Resend</button>
+            </form>
+            <div class="mt-6">
+                <a href="/register" class="text-sm font-medium text-zinc-900 underline hover:no-underline">Back to register</a>
+                <span class="mx-2 text-zinc-300">·</span>
+                <a href="/login" class="text-sm font-medium text-zinc-900 underline hover:no-underline">Login</a>
+            </div>
+        {/if}
+    </div>
+</div>
+{/include}

@@ -1,0 +1,9 @@
+*
+!target/*-runner
+!target/*-runner.jar
+!target/lib/*
+!target/quarkus-app/*
+!.devcontainer/
+!.devcontainer/*
+!.devcontainer/devcontainer.json
+!.devcontainer/entrypoint.sh

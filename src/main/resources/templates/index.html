@@ -1,0 +1,22 @@
+{#include base.html}
+{#title}Home{/title}
+{#body}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
+        <h1 class="text-xl font-semibold tracking-tight">Track your media</h1>
+        <p class="mt-2 text-sm text-zinc-600 leading-relaxed">Personal system for movies, TV shows and video games. Wishlist → in progress → completed. Phase 1: authentication with email verification.</p>
+        <div class="mt-6 flex gap-2">
+            {#if currentUser}
+                <a href="/app" class="px-4 py-2 bg-zinc-900 text-white rounded-sm border border-zinc-900 text-sm font-medium hover:bg-zinc-800">Go to library</a>
+                <a href="/me" class="px-4 py-2 bg-white border border-zinc-200 rounded-sm text-sm font-medium hover:bg-zinc-50">Profile JSON</a>
+            {#else}
+                <a href="/register" class="px-4 py-2 bg-zinc-900 text-white rounded-sm border border-zinc-900 text-sm font-medium hover:bg-zinc-800">Create account</a>
+                <a href="/login" class="px-4 py-2 bg-white border border-zinc-200 rounded-sm text-sm font-medium hover:bg-zinc-50">Login</a>
+            {/if}
+        </div>
+        <div class="mt-6 pt-6 border-t border-zinc-200">
+            <p class="text-xs font-mono text-zinc-500">Version 0.2.0 · Qute + Tailwind CDN · pure Tailwind (no DaisyUI) · sharp rounded-sm + border only</p>
+        </div>
+    </div>
+</div>
+{/include}

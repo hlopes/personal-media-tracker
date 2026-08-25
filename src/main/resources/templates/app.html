@@ -1,0 +1,27 @@
+{#include base.html}
+{#title}Library{/title}
+{#body}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
+        <h1 class="text-lg font-semibold tracking-tight">Welcome, <span class="font-mono text-sm border border-zinc-200 px-1.5 py-0.5 rounded-sm">{email}</span></h1>
+        <p class="mt-2 text-sm text-zinc-600">Authenticated via HttpOnly <span class="font-mono text-xs">jwt</span> cookie (1h). This is the placeholder library page for 0.2.0 — media tables/cards arrive in 0.3.0.</p>
+        <div class="mt-4 flex gap-2 text-sm">
+            <a href="/api/me" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">GET /api/me (JSON)</a>
+            <a href="/q/swagger-ui" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">Swagger</a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-0 overflow-hidden">
+        <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+            <h2 class="text-sm font-semibold">Library</h2>
+            <span class="text-xs font-mono text-zinc-500 border border-zinc-200 px-2 py-1 rounded-sm">empty — 0.3.0</span>
+        </div>
+        <div class="p-6">
+            <div class="border border-dashed border-zinc-300 rounded-sm p-8 text-center">
+                <p class="text-sm text-zinc-600">No media items yet. Tables and card lists will appear here.</p>
+                <p class="mt-1 text-xs font-mono text-zinc-500">Sharp: border, rounded-sm, shadow-sm, zinc-50/900 only</p>
+            </div>
+        </div>
+    </div>
+</div>
+{/include}
