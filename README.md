@@ -5,46 +5,18 @@ REST API + server-rendered auth pages for tracking movies, TV shows, video games
 ## Stack (per request)
 
 - **Quarkus 3.38.3** (Java 21, `org.hlopes`), **PostgreSQL 16** via **Docker Compose persistent volume** for `dev` + Dev Services/Testcontainers for `test`, **Flyway** (`V1__create_users.sql`), **Hibernate ORM Panache**, **Lombok 1.18.46**, **MapStruct (CDI)**, **SmallRye JWT + JWT Build**, **Mailer (log fallback)**, **SmallRye OpenAPI/Swagger UI**, **Qute + REST-Qute** (`quarkus-qute`, `quarkus-rest-qute`, Tailwind 4 CDN)
-- Project structure: `entity/`, `repository/`, `service/`, `resource/` (`AuthResource` JSON+form auth + `PageResource` Qute), `security/JwtCookieFilter` (cookie→Bearer), `dto/` (records), `mapper/`, `config/`, `exception/`, `templates/` (`base.html`, `index.html`, `app.html`, `auth/login.html`, `auth/register.html`, `auth/verification-sent.html`, `auth/verify-result.html`) (`src/main/java/org/hlopes`)
+- Project structure: `entity/`, `repository/`, `service/` (`AuthService`, `EmailService`, `JwtService` via `config/ApplicationConfig` `@ConfigMapping`), `resource/` (`AuthResource` JSON+form auth + `PageResource` Qute), `security/JwtCookieFilter` (cookie→Bearer), `dto/` (records), `mapper/`, `config/` (`ApplicationConfig.java:6` typed mapping + `OpenApiConfig`), `exception/`, `templates/` (`base.html`, `index.html`, `app.html`, `auth/login.html`, `auth/register.html`, `auth/verification-sent.html`, `auth/verify-result.html`) (`src/main/java/org/hlopes`)
 - Domain: see `CONTEXT.md:1` (`User` identified by email, `Authentication`, `Email Verification`)
 
 ## Prerequisites
 
-- **JDK 21** (Temurin 21.0.12 LTS). Quarkus 3.38 + Lombok 1.18.46 target LTS 21; running on JDK 26 fails (see Troubleshooting). If JDK 26 is your system default, use the wrappers which auto-select JDK 21:
-  ```powershell
-  .\dev.ps1          # PowerShell (sets JAVA_HOME to C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot then runs quarkus:dev)
-  .\dev.bat          # CMD equivalent
-  # or manually:
-  $env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"; $env:PATH="$env:JAVA_HOME\bin;$env:PATH"; java -version # must show 21
-  ```
-  The build enforces `[21,22)` via `maven-enforcer-plugin` (`pom.xml:116`) — on JDK 26 you get: `This project requires JDK 21...` instead of cryptic `TypeTag :: UNKNOWN`. Lombok was updated `1.18.34` → `1.18.46` (`pom.xml:19`) to fix JDK 26 `TypeTag` compile error when `-Denforcer.skip=true`.
 - **Docker Desktop** running (for Postgres Dev Services + tests). `docker ps` must succeed.
 - `publicKey.pem` / `privateKey.pem` already generated in `src/main/resources` (RSA 2048, `mp.jwt.verify.issuer=mediashelf`, 1h expiry). Regenerate with: `java` GenKeys snippet in `src/main/resources`.
-
-## Dev Container (no JDK switch needed)
-
-The repo includes `.devcontainer/devcontainer.json:1` — `mcr.microsoft.com/devcontainers/java:21` + `docker-outside-of-docker:1` (reuses host Docker for Testcontainers/Postgres DevServices; no DinD daemon). Inside the container JDK is pinned to 21, so host can stay on JDK 26.
-
-**VS Code:** `Dev Containers: Reopen in Container` (or `Reopen in Container` popup). Wait for `postCreateCommand` (`java -version`/`mvn -version`/`./mvnw -v`), then inside container:
-
-```bash
-./mvnw quarkus:dev    # no JAVA_HOME needed — container is JDK 21
-./mvnw test           # 6 tests, postgres:16-alpine via host Docker
-```
-
-Ports `8080` (Quarkus), `5005` (debug), `5432`, `1025`/`8025` (Mailpit) are forwarded. Swagger at `http://localhost:8080/q/swagger-ui` on host.
-
-**If you saw `"/.devcontainer/entrypoint.sh": not found` / `Cleaned up staged entrypoint.sh`:** this was `docker-in-docker:2` staging a temp entrypoint that was cleaned before cache compute. Fixed in `devcontainer.json:4` by switching to `docker-outside-of-docker:1` + adding `.devcontainer/entrypoint.sh:1` no-op. Rebuild without cache: `Dev Containers: Rebuild Container Without Cache` or `devcontainer up --workspace-folder . --remove-existing-container` / `docker builder prune` then retry. Verify `./mvnw -v` shows `Java 21` inside container.
-
-**Codespaces / devcontainer CLI:** `devcontainer up --workspace-folder . && devcontainer exec --workspace-folder . ./mvnw test`
-
-No `dev.ps1` / `JAVA_HOME` needed inside container — enforcer passes (`pom.xml:116`).
 
 ## Run in dev (live coding + Swagger + Qute + persistent DB)
 
 ```powershell
 docker compose up -d postgres   # once — creates mediashelf_postgres_data volume (data survives restarts)
-.\dev.ps1                       # recommended — auto-selects JDK 21, starts quarkus:dev on host
 # or inside devcontainer: ./mvnw quarkus:dev  (host.docker.internal:5432 via docker-outside-of-docker)
 ```
 
@@ -82,22 +54,12 @@ curl -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/
 curl http://localhost:8080/api/me -H "Authorization: Bearer <jwt>"
 ```
 
-## Tests (use Dev Services postgres)
-
-```powershell
-.\dev.ps1 test                                   # wrapper sets JDK 21 then runs .\mvnw.cmd test
-# or manually:
-$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"; $env:PATH="$env:JAVA_HOME\bin;$env:PATH"; .\mvnw.cmd test   # 13 tests: AuthFlowIntegrationTest + AuthResourceTest + PageResourceTest, pulls postgres:16-alpine once
-```
-
-Tests cover: API register → 403 login before verify → resend → invalid token → verify via repository → login → `GET /api/me` with JWT → duplicate 409 → case-insensitive email → validation 400 → openapi contains title → Qute `GET /`, `GET /login` sharp design (`rounded-sm`/`border-zinc-200`/`bg-zinc-900`, no `bg-gradient`), `POST /register` 303, `POST /login` cookie + `Location: /login?error=` + `GET /app` 401, `GET /verify` 200.
-
 ## Config (src/main/resources/application.properties)
 
 - `quarkus.datasource` — `test`: DevServices random port (`quarkus.datasource.devservices.enabled=true`, `postgres:16-alpine`, `mediashelf`), `dev`: compose persistent (`%dev.quarkus.datasource.devservices.enabled=false`, `%dev.quarkus.datasource.jdbc.url=jdbc:postgresql://host.docker.internal:5432/mediashelf`), `prod`: `%prod.quarkus.datasource.jdbc.url` via env `QUARKUS_DATASOURCE_JDBC_URL`, `quarkus.flyway.migrate-at-start=true`
-- `mp.jwt.verify.publickey.location=publicKey.pem`, `smallrye.jwt.sign.key.location=privateKey.pem`, `issuer=mediashelf`, `lifespan=3600`
+- `mp.jwt.verify.publickey.location=publicKey.pem`, `smallrye.jwt.sign.key.location=privateKey.pem`, `issuer=mediashelf`, `lifespan=3600` (also exposed as `mediashelf.jwt.issuer`/`lifespan` aliases for typed access — see below)
 - `quarkus.mailer.from=noreply@mediashelf.local`, `host=localhost:1025`, `mock=false` (dev) / `mock=true` (test), `EmailService` always logs link as fallback.
-- `mediashelf.verification.token-expiry-hours=24`, `base-url=http://localhost:8080`
+- `mediashelf.verification.token-expiry-hours=24`, `base-url=http://localhost:8080` — accessed **only** via typed `config/ApplicationConfig.java:6` (`@ConfigMapping(prefix = "mediashelf")` from Quarkus/SmallRye Config). No `@ConfigProperty` remains in `service/` (`AuthService.java:7`, `EmailService.java:3`, `JwtService.java:6` inject `ApplicationConfig`): `verification.tokenExpiryHours()`/`baseUrl()` and `jwt.issuer()`/`lifespan()` (with `@WithDefault`). `application.properties:65` defines `mediashelf.jwt.issuer=${mp.jwt.verify.issuer}` / `lifespan=${smallrye.jwt.new-token.lifespan}` aliases so the single `mediashelf` mapping covers JWT without an empty-prefix mapping.
 
 ## Decisions
 
@@ -111,7 +73,6 @@ Tests cover: API register → 403 login before verify → resend → invalid tok
 ## Packaging
 
 ```powershell
-.\dev.ps1 package
 java -jar target/quarkus-app/quarkus-run.jar
 ```
 
@@ -125,10 +86,9 @@ Fatal error compiling: java.lang.ExceptionInInitializerError: com.sun.tools.java
 
 Cause: system `JAVA_HOME` points to JDK 26 (`C:\Projects\HOME\jdk-26.0.2.1`), but Quarkus 3.38 LTS + Lombok target JDK 21. Fix:
 
-- Use wrappers: `.\dev.ps1` / `.\dev.bat` (auto-set `JAVA_HOME` to Temurin 21 and ensure Docker)
 - Or set manually: `$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"; $env:PATH="$env:JAVA_HOME\bin;$env:PATH"`
 - Build now enforces `[21,22)` (`pom.xml:116`) and fails fast with `This project requires JDK 21...` instead of cryptic `TypeTag`. Lombok bumped to `1.18.46` so `-Denforcer.skip=true` compiles on JDK 26, but running Quarkus on 26 is not supported — use 21.
 
 **Docker `Please configure the datasource URL ... or ensure the Docker daemon is up`**
 
-`docker ps` must succeed. Start Docker Desktop: `Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"` then retry. `dev.ps1` does this automatically.
+`docker ps` must succeed. Start Docker Desktop: `Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"` then retry.
