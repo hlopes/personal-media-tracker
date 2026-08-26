@@ -162,7 +162,7 @@ public class AuthResource {
     // --- Form: register (browser) ---
 
     @POST
-    @Path("/register")
+    @Path("/api/register")
     @PermitAll
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response registerForm(@FormParam("email") String email, @FormParam("password") String password) {
@@ -207,7 +207,7 @@ public class AuthResource {
     // --- Form: login (browser, sets HttpOnly cookie) ---
 
     @POST
-    @Path("/login")
+    @Path("/api/login")
     @PermitAll
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response loginForm(@FormParam("email") String email, @FormParam("password") String password) {
@@ -256,7 +256,7 @@ public class AuthResource {
     // --- Form: resend verification (browser) ---
 
     @POST
-    @Path("/resend-verification")
+    @Path("/api/resend-verification")
     @PermitAll
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response resendForm(@FormParam("email") String email) {
@@ -314,7 +314,7 @@ public class AuthResource {
     // --- Logout (clears cookie) ---
 
     @POST
-    @Path("/logout")
+    @Path("/api/logout")
     @PermitAll
     public Response logout() {
         NewCookie clear = new NewCookie.Builder(JWT_COOKIE)

@@ -57,7 +57,7 @@ public class PageResourceTest {
                 .formParam("email", email)
                 .formParam("password", "password123")
                 .when()
-                .post("/register")
+                .post("/api/register")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/verification-sent"));
@@ -89,7 +89,7 @@ public class PageResourceTest {
                 .formParam("email", email)
                 .formParam("password", password)
                 .when()
-                .post("/login")
+                .post("/api/login")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/login?error="))
