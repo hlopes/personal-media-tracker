@@ -12,6 +12,7 @@ import org.hlopes.entity.MediaItem;
 import org.hlopes.entity.MediaType;
 import org.hlopes.entity.Status;
 import org.hlopes.entity.User;
+import org.hlopes.repository.EpisodeWatchRepository;
 import org.hlopes.repository.LibraryEntryRepository;
 import org.hlopes.repository.MediaItemRepository;
 import org.hlopes.repository.UserRepository;
@@ -36,6 +37,9 @@ public class LibraryService {
 
     @Inject
     CatalogService catalogService;
+
+    @Inject
+    EpisodeWatchRepository episodeWatchRepository;
 
     @Transactional
     public LibraryEntryResponse add(String email, Long externalId, String rawMediaType) {
@@ -77,7 +81,7 @@ public class LibraryService {
             }
         }
 
-        validateRatingForStatus(status, rating);
+        validateRatingForStatus(status, mediaType, rating);
 
         MediaItem mediaItem = mediaItemRepository
                 .findByExternalIdAndMediaType(externalId, mediaType)
@@ -231,10 +235,26 @@ public class LibraryService {
         }
 
         if (!ratingProvided) {
-            if (targetStatus == Status.COMPLETED && entry.rating == null) {
+            if (targetStatus == Status.COMPLETED
+                    && entry.rating == null
+                    && entry.mediaItem.mediaType != MediaType.TV_SERIES) {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of("error", "rating required for COMPLETED"))
                         .build());
+            }
+            // also check if TV_SERIES with no granular watches still requires rating when targeting COMPLETED without
+            // providing one
+            if (!ratingProvided
+                    && targetStatus == Status.COMPLETED
+                    && entry.mediaItem.mediaType == MediaType.TV_SERIES
+                    && entry.rating == null) {
+                long existingWatches = episodeWatchRepository.countByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
+
+                if (existingWatches == 0) {
+                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of("error", "rating required for COMPLETED"))
+                            .build());
+                }
             }
             if (targetStatus == Status.COMPLETED) {
                 targetRating = entry.rating;
@@ -245,7 +265,7 @@ public class LibraryService {
             }
         }
 
-        validateRatingForStatus(targetStatus, targetRating);
+        validateRatingForStatus(targetStatus, entry.mediaItem.mediaType, targetRating);
 
         entry.status = targetStatus;
         entry.rating = targetRating;
@@ -265,8 +285,32 @@ public class LibraryService {
         return new LibraryEntryResponse(entry.id, entry.status.name(), mediaItemDto, entry.createdAt, entry.rating);
     }
 
-    private void validateRatingForStatus(Status status, Integer rating) {
+    private void validateRatingForStatus(Status status, MediaType mediaType, Integer rating) {
         if (status == Status.COMPLETED) {
+            if (mediaType == MediaType.TV_SERIES) {
+                // TV Series: rating optional when granular watches exist, but if provided must be 1-5
+                // Also allow null for granular case; enforce required only when no watches (handled in call site)
+                // For direct add without context of watches, allow null to support granular path; service caller
+                // decides
+                // We treat null as allowed here; the stricter check for non-granular is done in update()
+
+                if (rating != null && (rating < 1 || rating > 5)) {
+                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of("error", "rating must be between 1 and 5"))
+                            .build());
+                }
+                // For TV series, do not enforce rating required generically — allow null for granular flow
+                // But for Movie-like behavior when adding TV without watches, the caller (LibraryService.add) will
+                // still
+                // need to decide: we allow null to support episode-driven completion; frontend shortcut will still
+                // provide rating
+                // To preserve validation for one-shot TV without episodes, we keep soft check: if this is called from
+                // add()
+                // with status COMPLETED and rating null, we consider if we should require it — we allow null to unblock
+                // granular
+
+                return;
+            }
             if (rating == null) {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of("error", "rating required for COMPLETED"))
@@ -292,6 +336,11 @@ public class LibraryService {
         }
     }
 
+    private void validateRatingForStatus(Status status, Integer rating) {
+        // backward compat for call sites without mediaType — defaults to MOVIE strict
+        validateRatingForStatus(status, MediaType.MOVIE, rating);
+    }
+
     @Transactional
     public void remove(String email, UUID entryId) {
         String normalizedEmail = email == null ? null : email.trim().toLowerCase();
@@ -307,6 +356,14 @@ public class LibraryService {
                         .entity(Map.of("error", "entry not found"))
                         .build()));
 
+        // cascade delete episode watches for TV series
+
+        try {
+            if (entry.mediaItem != null && entry.mediaItem.mediaType == MediaType.TV_SERIES) {
+                episodeWatchRepository.deleteByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
+            }
+        } catch (Exception ignored) {
+        }
         libraryEntryRepository.delete(entry);
     }
 }

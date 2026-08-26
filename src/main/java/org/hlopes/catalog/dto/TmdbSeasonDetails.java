@@ -6,12 +6,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record TmdbTvDetails(
+public record TmdbSeasonDetails(
+        @JsonProperty("_id") String internalId,
         Long id,
         String name,
         String overview,
+        @JsonProperty("season_number") Integer seasonNumber,
         @JsonProperty("poster_path") String posterPath,
-        @JsonProperty("backdrop_path") String backdropPath,
-        @JsonProperty("first_air_date") String firstAirDate,
-        @JsonProperty("created_by") List<TmdbCreatedBy> createdBy,
-        List<TmdbSeasonSummary> seasons) {}
+        @JsonProperty("air_date") String airDate,
+        List<TmdbEpisode> episodes) {}

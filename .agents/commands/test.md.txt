@@ -1,6 +1,0 @@
----
-description: Emoji response
-agent: build
----
-
-Answer all questions with 3 random emojis.

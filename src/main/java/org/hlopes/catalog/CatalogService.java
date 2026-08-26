@@ -39,6 +39,9 @@ public class CatalogService {
     @Inject
     MediaItemService mediaItemService;
 
+    @Inject
+    TvSeasonService tvSeasonService;
+
     @CacheResult(cacheName = "catalog-search")
     public CatalogSearchResponse search(String query, String type, int page) {
         String normalized = query == null ? "" : query.trim();
@@ -164,6 +167,12 @@ public class CatalogService {
                 }
 
                 mediaItem = mediaItemService.findOrCreateFromTv(details);
+
+                try {
+                    tvSeasonService.syncFromTvDetails(mediaItem, details);
+                } catch (Exception ignored) {
+                }
+
                 credits = tmdbClient.getTvCredits(externalId, apiKey, "en-US");
 
                 if (details.createdBy() != null && !details.createdBy().isEmpty()) {

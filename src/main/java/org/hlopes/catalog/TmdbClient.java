@@ -4,6 +4,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.hlopes.catalog.dto.TmdbCredits;
 import org.hlopes.catalog.dto.TmdbMovieDetails;
 import org.hlopes.catalog.dto.TmdbSearchResponse;
+import org.hlopes.catalog.dto.TmdbSeasonDetails;
 import org.hlopes.catalog.dto.TmdbTvDetails;
 
 import jakarta.ws.rs.GET;
@@ -60,4 +61,12 @@ public interface TmdbClient {
     @Path("/tv/{id}/credits")
     TmdbCredits getTvCredits(
             @PathParam("id") Long id, @QueryParam("api_key") String apiKey, @QueryParam("language") String language);
+
+    @GET
+    @Path("/tv/{id}/season/{seasonNumber}")
+    TmdbSeasonDetails getSeason(
+            @PathParam("id") Long id,
+            @PathParam("seasonNumber") int seasonNumber,
+            @QueryParam("api_key") String apiKey,
+            @QueryParam("language") String language);
 }

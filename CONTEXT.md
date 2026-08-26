@@ -24,12 +24,28 @@ _Avoid_: Media, entry, title (overloaded)
 The kind of a MediaItem: `MOVIE` or `TV_SERIES` (from TMDB `movie`/`tv`). Determines which title/date field is canonical.
 _Avoid_: Type alone, category
 
+**TV Series**:
+A subtype of `MediaItem` where `mediaType = TV_SERIES`, composed of ordered `Season`s each containing `Episode`s. A `TV Series` is tracked via a single `Library Entry` at series level, with granular progress derived from `Episode Watch` rows.
+_Avoid_: Show, serial as synonym
+
+**Season**:
+An ordered grouping of `Episode`s within a `TV Series`, identified by `season_number >= 0` (0 is Specials). A `Season` carries name, poster path, air date and episode count from the `Catalog`, cached locally on first TV detail. Specials (`0`) is collapsed by default and excluded from `Completed` progress.
+_Avoid_: Series as synonym, volume
+
+**Episode**:
+A single broadcast unit within a `Season`, uniquely identified within its `TV Series` by `season_number` + `episode_number` and ordered by `episode_number`. Holds title, synopsis, still path, air date and runtime from the `Catalog`. An `Episode` is not a `MediaItem`.
+_Avoid_: Chapter, installment
+
+**Episode Watch**:
+The association between a `User` and an `Episode` indicating it has been watched. Presence of the row means watched; it may carry a nullable `Rating` 1–5 and `watchedAt` set on creation. `Season` completeness and `Library Entry` `Status` for a `TV Series` are derived from the set of `Episode Watch` rows, counting only `Season`s with `season_number != 0` and rejecting watches for unaired `Episode`s (`airDate` in the future).
+_Avoid_: Watched episode as entity name, viewing log
+
 **Library Entry**:
 The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `WISHLIST`.
 _Avoid_: Collection item, log, backlog entry
 
 **Status**:
-The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. Phase 2 uses `WISHLIST` only; phase 3 uses `COMPLETED` for watched items. Removal hard-deletes the entry regardless of status.
+The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. For a `Movie` it is set directly; for a `TV Series` it is derived from `Episode Watch` progress (`0` watched → `WISHLIST`, `some` → `IN_PROGRESS`, `all` counted episodes watched or explicit series mark → `COMPLETED`). Removal hard-deletes the entry and its `Episode Watch` rows regardless of status.
 _Avoid_: State, stage
 
 **Wishlist**:
@@ -37,15 +53,15 @@ The filtered view of a User's Library Entries where `status = WISHLIST`. The UI 
 _Avoid_: Backlog as separate concept, watchlist
 
 **Watched**:
-The filtered view of a User's Library Entries where `status = COMPLETED`, always paired with a `Rating`. The UI label "Watched" maps to `COMPLETED`; "Completed" is the domain term.
+The filtered view of a User's Library Entries where `status = COMPLETED`. For a `Movie` it is always paired with a `Rating`; for a `TV Series` `Rating` may be at series level or derived as the average of `Episode Watch` `Rating`s. The UI label "Watched" maps to `COMPLETED`; "Completed" is the domain term.
 _Avoid_: Watched as separate entity, history, seen
 
 **Rating**:
-An integer 1–5 attached to a `Library Entry` with `status = COMPLETED`, representing the User's 5-star assessment of the `MediaItem`. `Rating` is required when `COMPLETED`, forbidden when `WISHLIST`, and mutable via update.
+An integer 1–5 representing the User's 5-star assessment. For a `Movie` `Library Entry` it is required when `status = COMPLETED` and forbidden when `WISHLIST`; for a `TV Series` it may be attached per `Episode Watch` (nullable) and is optional at the `Library Entry` when granular watches exist, but remains required for a one-shot series mark without episodes. `Rating` is mutable via update and rendered as stars.
 _Avoid_: Vote, score, stars as domain term (stars is presentation)
 
 **Completed**:
-The `Status` value indicating a `Library Entry` has been consumed (watched). A `Completed` entry must carry a `Rating` 1–5.
+The `Status` value indicating a `Library Entry` has been consumed (watched). For a `Movie` a `Completed` entry must carry a `Rating` 1–5; for a `TV Series` with granular `Episode Watch` rows the series `Rating` is optional and per-episode `Rating`s are used.
 _Avoid_: Watched as status value, finished
 
 **Catalog**:

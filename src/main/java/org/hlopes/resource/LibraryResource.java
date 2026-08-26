@@ -40,7 +40,7 @@ public class LibraryResource {
     }
 
     @PATCH
-    @Path("/{id}")
+    @Path("/library/{id}")
     @RolesAllowed("User")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

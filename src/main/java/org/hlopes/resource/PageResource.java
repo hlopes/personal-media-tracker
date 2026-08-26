@@ -4,7 +4,12 @@ import java.net.URI;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hlopes.catalog.CatalogService;
+import org.hlopes.catalog.TvSeasonService;
+import org.hlopes.catalog.dto.EnrichedEpisodeDto;
+import org.hlopes.catalog.dto.EnrichedSeasonDto;
+import org.hlopes.catalog.dto.SeasonWithEpisodesDto;
 import org.hlopes.config.ApplicationConfig;
+import org.hlopes.repository.EpisodeWatchRepository;
 import org.hlopes.repository.LibraryEntryRepository;
 import org.hlopes.repository.MediaItemRepository;
 import org.hlopes.repository.UserRepository;
@@ -70,6 +75,12 @@ public class PageResource {
 
     @Inject
     LibraryService libraryService;
+
+    @Inject
+    TvSeasonService tvSeasonService;
+
+    @Inject
+    EpisodeWatchRepository episodeWatchRepository;
 
     @Inject
     JsonWebToken jwt;
@@ -191,6 +202,18 @@ public class PageResource {
                     ? imageBase + "/w1280" + detail.mediaItem().backdropPath()
                     : null;
 
+            java.util.List<org.hlopes.catalog.dto.SeasonWithEpisodesDto> rawSeasons = java.util.List.of();
+
+            try {
+                if (detail.mediaItem() != null && detail.mediaItem().id() != null) {
+                    rawSeasons = tvSeasonService.getSeasonsWithEpisodes(
+                            detail.mediaItem().id());
+                }
+            } catch (Exception ignored) {
+            }
+
+            java.util.List<EnrichedSeasonDto> seasons = buildEnrichedSeasons(rawSeasons, detail.mediaItem(), email);
+
             TemplateInstance instance = catalog_detail
                     .data("mediaItem", detail.mediaItem())
                     .data("cast", detail.credits().cast())
@@ -202,7 +225,9 @@ public class PageResource {
                     .data("currentStatus", currentStatus)
                     .data("currentRating", currentRating)
                     .data("currentEntryId", currentEntryId)
-                    .data("currentUser", email);
+                    .data("currentUser", email)
+                    .data("seasons", seasons)
+                    .data("imageBase", imageBase);
 
             return Response.ok(instance).build();
 
@@ -214,11 +239,7 @@ public class PageResource {
         } catch (NotFoundException e) {
             throw e;
         } catch (jakarta.ws.rs.WebApplicationException e) {
-            if (e.getResponse().getStatus() == 404) {
-                throw new NotFoundException("Media not found");
-            }
-
-            // Fallback to cached MediaItem when TMDB is unavailable
+            // Fallback to cached MediaItem when TMDB is unavailable (including 404 if cached exists)
 
             try {
                 String normalized = type == null ? "" : type.trim().toLowerCase();
@@ -273,6 +294,16 @@ public class PageResource {
                             }
                         }
 
+                        java.util.List<org.hlopes.catalog.dto.SeasonWithEpisodesDto> rawSeasons = java.util.List.of();
+
+                        try {
+                            rawSeasons = tvSeasonService.getSeasonsWithEpisodes(mediaItem.id);
+                        } catch (Exception ignored) {
+                        }
+
+                        java.util.List<EnrichedSeasonDto> seasons =
+                                buildEnrichedSeasons(rawSeasons, mediaItemDto, email);
+
                         TemplateInstance instance = catalog_detail
                                 .data("mediaItem", mediaItemDto)
                                 .data("cast", java.util.List.of())
@@ -284,12 +315,18 @@ public class PageResource {
                                 .data("currentStatus", currentStatus)
                                 .data("currentRating", currentRating)
                                 .data("currentEntryId", currentEntryId)
-                                .data("currentUser", email);
+                                .data("currentUser", email)
+                                .data("seasons", seasons)
+                                .data("imageBase", imageBase);
 
                         return Response.ok(instance).build();
                     }
                 }
             } catch (Exception ignored) {
+            }
+
+            if (e.getResponse().getStatus() == 404) {
+                throw new NotFoundException("Media not found");
             }
 
             throw e;
@@ -298,6 +335,78 @@ public class PageResource {
 
             return Response.seeOther(URI.create("/app?error=" + msg)).build();
         }
+    }
+
+    private java.util.List<EnrichedSeasonDto> buildEnrichedSeasons(
+            java.util.List<SeasonWithEpisodesDto> rawSeasons,
+            org.hlopes.catalog.dto.MediaItemDto mediaItemDto,
+            String email) {
+        if (mediaItemDto == null || mediaItemDto.id() == null) {
+            return java.util.List.of();
+        }
+        // find mediaItem entity id is mediaItemDto.id()
+        java.util.UUID mediaItemId = mediaItemDto.id();
+        java.util.Map<java.util.UUID, org.hlopes.entity.EpisodeWatch> watchMap = java.util.Map.of();
+
+        try {
+            if (email != null && !email.isBlank()) {
+                var userOpt = userRepository.findByEmail(email.trim().toLowerCase());
+
+                if (userOpt.isPresent()) {
+                    var watches = episodeWatchRepository.findByUserIdAndMediaItemId(userOpt.get().id, mediaItemId);
+                    watchMap = watches.stream()
+                            .collect(java.util.stream.Collectors.toMap(w -> w.episode.id, w -> w, (a, b) -> a));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        java.util.List<EnrichedSeasonDto> result = new java.util.ArrayList<>();
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        for (SeasonWithEpisodesDto sw : rawSeasons) {
+            java.util.List<EnrichedEpisodeDto> enrichedEps = new java.util.ArrayList<>();
+
+            for (var epDto : sw.episodes()) {
+                var watch = watchMap.get(epDto.id());
+                boolean watched = watch != null;
+                Integer rating = watched ? watch.rating : null;
+                boolean future = epDto.airDate() != null && epDto.airDate().isAfter(today);
+                enrichedEps.add(new EnrichedEpisodeDto(
+                        epDto.id(),
+                        epDto.seasonNumber(),
+                        epDto.episodeNumber(),
+                        epDto.title(),
+                        epDto.synopsis(),
+                        epDto.stillPath(),
+                        epDto.airDate(),
+                        epDto.runtime(),
+                        watched,
+                        rating,
+                        future));
+            }
+            long watchedCount =
+                    enrichedEps.stream().filter(EnrichedEpisodeDto::watched).count();
+            result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watchedCount));
+        }
+        return result;
+    }
+
+    private java.util.List<EnrichedSeasonDto> buildEnrichedSeasons(
+            java.util.List<SeasonWithEpisodesDto> rawSeasons, org.hlopes.entity.MediaItem mediaItem, String email) {
+        if (mediaItem == null || mediaItem.id == null) {
+            return java.util.List.of();
+        }
+        org.hlopes.catalog.dto.MediaItemDto dto = new org.hlopes.catalog.dto.MediaItemDto(
+                mediaItem.id,
+                mediaItem.externalId,
+                mediaItem.mediaType.name(),
+                mediaItem.title,
+                mediaItem.synopsis,
+                mediaItem.posterPath,
+                mediaItem.backdropPath,
+                mediaItem.releaseDate);
+
+        return buildEnrichedSeasons(rawSeasons, dto, email);
     }
 
     @GET
