@@ -39,7 +39,7 @@ public class AppFlowTest {
                 .formParam("email", email)
                 .formParam("password", password)
                 .when()
-                .post("/login")
+                .post("/api/login")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/app"))

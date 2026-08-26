@@ -48,7 +48,7 @@
                 {#if currentUser}
                     <a href="/wishlist" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Wishlist</a>
                     <span class="text-zinc-700 font-mono text-xs px-3 py-1.5 border border-zinc-200 bg-zinc-50 rounded-sm">{currentUser}</span>
-                    <form method="post" action="/logout" class="inline">
+                    <form method="post" action="/api/logout" class="inline">
                         <button type="submit" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Logout</button>
                     </form>
                 {#else}

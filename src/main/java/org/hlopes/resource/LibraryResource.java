@@ -16,7 +16,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-@Path("/api/me")
+@Path("/api/me/library")
 @Tag(name = "Library", description = "Personal Wishlist — Library Entry management")
 public class LibraryResource {
 
@@ -27,7 +27,6 @@ public class LibraryResource {
     JsonWebToken jwt;
 
     @POST
-    @Path("/library")
     @RolesAllowed("User")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -39,7 +38,6 @@ public class LibraryResource {
     }
 
     @GET
-    @Path("/library")
     @RolesAllowed("User")
     @Produces(MediaType.APPLICATION_JSON)
     public PaginatedLibraryResponse list(
@@ -54,7 +52,7 @@ public class LibraryResource {
     }
 
     @DELETE
-    @Path("/library/{id}")
+    @Path("/{id}")
     @RolesAllowed("User")
     public Response remove(@PathParam("id") java.util.UUID id) {
         String email = jwt.getSubject();

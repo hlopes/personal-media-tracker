@@ -38,7 +38,19 @@ public class LibraryResourceTest {
 
     @Test
     public void testWishlistPageRequiresAuth() {
-        given().when().get("/wishlist").then().statusCode(302).header("Location", containsString("/login"));
-        given().when().get("/media/movie/603").then().statusCode(302).header("Location", containsString("/login"));
+        given().redirects()
+                .follow(false)
+                .when()
+                .get("/wishlist")
+                .then()
+                .statusCode(303)
+                .header("Location", containsString("/login"));
+        given().redirects()
+                .follow(false)
+                .when()
+                .get("/media/movie/603")
+                .then()
+                .statusCode(303)
+                .header("Location", containsString("/login"));
     }
 }
