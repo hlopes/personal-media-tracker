@@ -10,7 +10,7 @@
             {#if posterUrl}
             <img src="{posterUrl}" alt="Poster for {mediaItem.title}" class="h-48 w-32 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />
             {/if}
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-mono border border-zinc-200 px-1.5 py-0.5 rounded-sm">{mediaItem.mediaType}</span>
                     {#if mediaItem.releaseDate}<span class="text-xs font-mono text-zinc-500">{mediaItem.releaseDate}</span>{/if}
@@ -20,15 +20,58 @@
                 <p class="mt-1 text-sm text-zinc-600">Director: <span class="font-medium">{director.name}</span></p>
                 {/if}
                 <p class="mt-3 text-sm text-zinc-700 leading-relaxed">{mediaItem.synopsis}</p>
-                <div class="mt-4">
-                    {#if alreadyInWishlist}
+                <div class="mt-4 space-y-3">
+                    {#if alreadyInWatched}
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-sm">Watched</span>
+                        <span class="text-sm text-amber-600">
+                            {#if currentRating == 5}★★★★★{/if}
+                            {#if currentRating == 4}★★★★☆{/if}
+                            {#if currentRating == 3}★★★☆☆{/if}
+                            {#if currentRating == 2}★★☆☆☆{/if}
+                            {#if currentRating == 1}★☆☆☆☆{/if}
+                            <span class="font-mono text-zinc-600">({currentRating}/5)</span>
+                        </span>
+                    </div>
+                    <div id="watched-actions" data-entry-id="{currentEntryId}" data-status="{currentStatus}" data-external-id="{mediaItem.externalId}" data-media-type="{mediaItem.mediaType}">
+                        <p class="text-xs font-mono text-zinc-600 mb-1">Update rating:</p>
+                        <div class="flex gap-1">
+                            <button data-rate="1" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 {#if currentRating == 1}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">1★</button>
+                            <button data-rate="2" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 {#if currentRating == 2}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">2★</button>
+                            <button data-rate="3" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 {#if currentRating == 3}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">3★</button>
+                            <button data-rate="4" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 {#if currentRating == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">4★</button>
+                            <button data-rate="5" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 {#if currentRating == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">5★</button>
+                        </div>
+                    </div>
+                    <button id="remove-watched-btn" data-entry-id="{currentEntryId}" class="text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-3 py-1.5">Remove from Watched</button>
+                    {#else if alreadyInWishlist}
                     <span class="inline-flex px-3 py-1.5 bg-zinc-900 text-white rounded-sm text-sm border border-zinc-900">Already in Wishlist</span>
+                    <div id="watched-actions" data-entry-id="{currentEntryId}" data-status="{currentStatus}" data-external-id="{mediaItem.externalId}" data-media-type="{mediaItem.mediaType}">
+                        <p class="text-xs font-mono text-zinc-600 mb-1">Mark as Watched:</p>
+                        <div class="flex gap-1">
+                            <button data-rate="1" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">1★</button>
+                            <button data-rate="2" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">2★</button>
+                            <button data-rate="3" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">3★</button>
+                            <button data-rate="4" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">4★</button>
+                            <button data-rate="5" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">5★</button>
+                        </div>
+                    </div>
                     {#else}
-                    <form method="post" action="/api/me/library" id="add-wishlist-form">
+                    <form method="post" action="/api/me/library" id="add-wishlist-form" class="inline">
                         <input type="hidden" name="externalId" value="{mediaItem.externalId}" />
                         <input type="hidden" name="mediaType" value="{mediaItem.mediaType}" />
                         <button type="submit" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Add to Wishlist</button>
                     </form>
+                    <div id="watched-actions" data-entry-id="" data-status="" data-external-id="{mediaItem.externalId}" data-media-type="{mediaItem.mediaType}" class="mt-3">
+                        <p class="text-xs font-mono text-zinc-600 mb-1">Or mark as Watched:</p>
+                        <div class="flex gap-1">
+                            <button data-rate="1" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">1★</button>
+                            <button data-rate="2" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">2★</button>
+                            <button data-rate="3" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">3★</button>
+                            <button data-rate="4" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">4★</button>
+                            <button data-rate="5" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">5★</button>
+                        </div>
+                    </div>
                     {/if}
                 </div>
             </div>
@@ -60,6 +103,47 @@ document.getElementById('add-wishlist-form')?.addEventListener('submit', functio
     fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)})
       .then(r => { if(r.status===201||r.status===409){ window.location.reload(); } else return r.json().then(j=>{ alert(j.error||'Failed'); }); })
       .catch(()=> alert('Failed'));
+});
+document.querySelectorAll('.watched-star').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const container = document.getElementById('watched-actions');
+    const entryId = container.getAttribute('data-entry-id');
+    const status = container.getAttribute('data-status');
+    const rating = Number(btn.getAttribute('data-rate'));
+    const externalId = Number(container.getAttribute('data-external-id'));
+    const mediaType = container.getAttribute('data-media-type');
+    if (!entryId) {
+      const payload = {};
+      payload.externalId = externalId;
+      payload.mediaType = mediaType;
+      payload.status = 'COMPLETED';
+      payload.rating = rating;
+      fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) })
+        .then(r => { if(r.status===201){ window.location.reload(); } else return r.json().then(j=> alert(j.error||'Failed')); })
+        .catch(()=> alert('Failed'));
+    } else if (status === 'COMPLETED') {
+      const payload = {};
+      payload.rating = rating;
+      fetch('/api/me/library/' + entryId, { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) })
+        .then(r => { if(r.ok){ window.location.reload(); } else return r.json().then(j=> alert(j.error||'Failed')); })
+        .catch(()=> alert('Failed'));
+    } else {
+      const payload = {};
+      payload.status = 'COMPLETED';
+      payload.rating = rating;
+      fetch('/api/me/library/' + entryId, { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) })
+        .then(r => { if(r.ok){ window.location.reload(); } else return r.json().then(j=> alert(j.error||'Failed')); })
+        .catch(()=> alert('Failed'));
+    }
+  });
+});
+document.getElementById('remove-watched-btn')?.addEventListener('click', () => {
+  const btn = document.getElementById('remove-watched-btn');
+  if (!confirm('Remove from Watched?')) return;
+  const id = btn.getAttribute('data-entry-id');
+  fetch('/api/me/library/' + id, { method: 'DELETE', credentials: 'include' })
+    .then(r => { if (r.status === 204) window.location.reload(); else return r.json().then(j=> alert(j.error||'Failed')); })
+    .catch(()=> alert('Failed'));
 });
 </script>
 {/include}

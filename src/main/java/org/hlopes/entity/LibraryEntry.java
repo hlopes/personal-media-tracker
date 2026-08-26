@@ -43,6 +43,9 @@ public class LibraryEntry extends PanacheEntityBase {
     @Column(name = "status", nullable = false, length = 20)
     public Status status;
 
+    @Column(name = "rating")
+    public Integer rating;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;

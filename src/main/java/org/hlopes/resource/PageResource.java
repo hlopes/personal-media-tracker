@@ -6,6 +6,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hlopes.catalog.CatalogService;
 import org.hlopes.config.ApplicationConfig;
 import org.hlopes.repository.LibraryEntryRepository;
+import org.hlopes.repository.MediaItemRepository;
 import org.hlopes.repository.UserRepository;
 import org.hlopes.service.LibraryService;
 
@@ -49,6 +50,10 @@ public class PageResource {
     Template wishlist;
 
     @Inject
+    @Location("watched")
+    Template watched;
+
+    @Inject
     CatalogService catalogService;
 
     @Inject
@@ -59,6 +64,9 @@ public class PageResource {
 
     @Inject
     LibraryEntryRepository libraryEntryRepository;
+
+    @Inject
+    MediaItemRepository mediaItemRepository;
 
     @Inject
     LibraryService libraryService;
@@ -92,16 +100,12 @@ public class PageResource {
             if (email == null || email.isBlank()) {
                 throw new NotAuthorizedException("Not logged in");
             }
-            // Also check that the JWT has the expected group/issuer; if the token is invalid/expired,
-            // SmallRye would have already rejected it via the filter, but with PermitAll we need to
-            // handle it.
-            // Rendering the app template with the email proves the cookie was valid.
+
             TemplateInstance instance = app.data("email", email).data("currentUser", email);
 
             return Response.ok(instance).build();
 
         } catch (Exception e) {
-            // For browser HTML, redirect to login instead of raw 401
             String msg = java.net.URLEncoder.encode(
                     "Please login to access your library", java.nio.charset.StandardCharsets.UTF_8);
 
@@ -148,8 +152,10 @@ public class PageResource {
     @Path("media/{type}/{id}")
     @PermitAll
     public Response getMediaDetail(@PathParam("type") String type, @PathParam("id") Long id) {
+        String email = null;
+
         try {
-            String email = jwt != null ? jwt.getSubject() : null;
+            email = jwt != null ? jwt.getSubject() : null;
 
             if (email == null || email.isBlank()) {
                 throw new NotAuthorizedException("Not logged in");
@@ -158,10 +164,23 @@ public class PageResource {
             var detail = catalogService.detail(type, id);
             var user = userRepository.findByEmail(email).orElse(null);
             boolean alreadyInWishlist = false;
+            boolean alreadyInWatched = false;
+            String currentStatus = null;
+            Integer currentRating = null;
+            java.util.UUID currentEntryId = null;
 
             if (user != null) {
-                alreadyInWishlist = libraryEntryRepository.existsByUserIdAndMediaItemId(
+                var opt = libraryEntryRepository.findByUserIdAndMediaItemId(
                         user.id, detail.mediaItem().id());
+
+                if (opt.isPresent()) {
+                    var e = opt.get();
+                    currentStatus = e.status.name();
+                    currentRating = e.rating;
+                    currentEntryId = e.id;
+                    alreadyInWishlist = e.status == org.hlopes.entity.Status.WISHLIST;
+                    alreadyInWatched = e.status == org.hlopes.entity.Status.COMPLETED;
+                }
             }
 
             String imageBase = applicationConfig.tmdb().imageBaseUrl();
@@ -179,6 +198,10 @@ public class PageResource {
                     .data("posterUrl", posterUrl)
                     .data("backdropUrl", backdropUrl)
                     .data("alreadyInWishlist", alreadyInWishlist)
+                    .data("alreadyInWatched", alreadyInWatched)
+                    .data("currentStatus", currentStatus)
+                    .data("currentRating", currentRating)
+                    .data("currentEntryId", currentEntryId)
                     .data("currentUser", email);
 
             return Response.ok(instance).build();
@@ -193,6 +216,80 @@ public class PageResource {
         } catch (jakarta.ws.rs.WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
                 throw new NotFoundException("Media not found");
+            }
+
+            // Fallback to cached MediaItem when TMDB is unavailable
+
+            try {
+                String normalized = type == null ? "" : type.trim().toLowerCase();
+                org.hlopes.entity.MediaType mt = null;
+
+                if (normalized.equals("movie")) {
+                    mt = org.hlopes.entity.MediaType.MOVIE;
+                } else if (normalized.equals("tv")
+                        || normalized.equals("tv_series")
+                        || normalized.equals("tv-series")) {
+                    mt = org.hlopes.entity.MediaType.TV_SERIES;
+                }
+
+                if (mt != null && email != null) {
+                    var mediaOpt = mediaItemRepository.findByExternalIdAndMediaType(id, mt);
+
+                    if (mediaOpt.isPresent()) {
+                        var mediaItem = mediaOpt.get();
+                        String imageBase = applicationConfig.tmdb().imageBaseUrl();
+                        String posterUrl =
+                                mediaItem.posterPath != null ? imageBase + "/w500" + mediaItem.posterPath : null;
+                        String backdropUrl =
+                                mediaItem.backdropPath != null ? imageBase + "/w1280" + mediaItem.backdropPath : null;
+
+                        var mediaItemDto = new org.hlopes.catalog.dto.MediaItemDto(
+                                mediaItem.id,
+                                mediaItem.externalId,
+                                mediaItem.mediaType.name(),
+                                mediaItem.title,
+                                mediaItem.synopsis,
+                                mediaItem.posterPath,
+                                mediaItem.backdropPath,
+                                mediaItem.releaseDate);
+
+                        var user = userRepository.findByEmail(email).orElse(null);
+                        boolean alreadyInWishlist = false;
+                        boolean alreadyInWatched = false;
+                        String currentStatus = null;
+                        Integer currentRating = null;
+                        java.util.UUID currentEntryId = null;
+
+                        if (user != null) {
+                            var opt = libraryEntryRepository.findByUserIdAndMediaItemId(user.id, mediaItem.id);
+
+                            if (opt.isPresent()) {
+                                var en = opt.get();
+                                currentStatus = en.status.name();
+                                currentRating = en.rating;
+                                currentEntryId = en.id;
+                                alreadyInWishlist = en.status == org.hlopes.entity.Status.WISHLIST;
+                                alreadyInWatched = en.status == org.hlopes.entity.Status.COMPLETED;
+                            }
+                        }
+
+                        TemplateInstance instance = catalog_detail
+                                .data("mediaItem", mediaItemDto)
+                                .data("cast", java.util.List.of())
+                                .data("director", null)
+                                .data("posterUrl", posterUrl)
+                                .data("backdropUrl", backdropUrl)
+                                .data("alreadyInWishlist", alreadyInWishlist)
+                                .data("alreadyInWatched", alreadyInWatched)
+                                .data("currentStatus", currentStatus)
+                                .data("currentRating", currentRating)
+                                .data("currentEntryId", currentEntryId)
+                                .data("currentUser", email);
+
+                        return Response.ok(instance).build();
+                    }
+                }
+            } catch (Exception ignored) {
             }
 
             throw e;
@@ -230,6 +327,38 @@ public class PageResource {
             return Response.seeOther(URI.create("/login?error=" + msg)).build();
         } catch (Exception e) {
             String msg = java.net.URLEncoder.encode("Failed to load wishlist", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/app?error=" + msg)).build();
+        }
+    }
+
+    @GET
+    @Path("watched")
+    @PermitAll
+    public Response getWatched(
+            @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("20") int size) {
+        try {
+            String email = jwt != null ? jwt.getSubject() : null;
+
+            if (email == null || email.isBlank()) {
+                throw new NotAuthorizedException("Not logged in");
+            }
+
+            var entries = libraryService.list(email, "COMPLETED", page, size);
+            long total = libraryService.count(email, "COMPLETED");
+
+            TemplateInstance instance =
+                    watched.data("entries", entries).data("total", total).data("currentUser", email);
+
+            return Response.ok(instance).build();
+
+        } catch (NotAuthorizedException e) {
+            String msg =
+                    java.net.URLEncoder.encode("Please login to view watched", java.nio.charset.StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/login?error=" + msg)).build();
+        } catch (Exception e) {
+            String msg = java.net.URLEncoder.encode("Failed to load watched", java.nio.charset.StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/app?error=" + msg)).build();
         }

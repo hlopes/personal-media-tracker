@@ -29,12 +29,24 @@ The association between a User and a MediaItem, holding the User-specific lifecy
 _Avoid_: Collection item, log, backlog entry
 
 **Status**:
-The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. Phase 2 uses `WISHLIST` only; removal hard-deletes the entry.
+The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. Phase 2 uses `WISHLIST` only; phase 3 uses `COMPLETED` for watched items. Removal hard-deletes the entry regardless of status.
 _Avoid_: State, stage
 
 **Wishlist**:
 The filtered view of a User's Library Entries where `status = WISHLIST`. The UI term "Backlog" maps to this view.
 _Avoid_: Backlog as separate concept, watchlist
+
+**Watched**:
+The filtered view of a User's Library Entries where `status = COMPLETED`, always paired with a `Rating`. The UI label "Watched" maps to `COMPLETED`; "Completed" is the domain term.
+_Avoid_: Watched as separate entity, history, seen
+
+**Rating**:
+An integer 1–5 attached to a `Library Entry` with `status = COMPLETED`, representing the User's 5-star assessment of the `MediaItem`. `Rating` is required when `COMPLETED`, forbidden when `WISHLIST`, and mutable via update.
+_Avoid_: Vote, score, stars as domain term (stars is presentation)
+
+**Completed**:
+The `Status` value indicating a `Library Entry` has been consumed (watched). A `Completed` entry must carry a `Rating` 1–5.
+_Avoid_: Watched as status value, finished
 
 **Catalog**:
 The external source of truth for searchable works (TMDB in phase 2), queried server-side via a proxied search and detail. The system never stores Catalog credentials in the browser.

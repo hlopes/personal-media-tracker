@@ -7,6 +7,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.hlopes.dto.AddToLibraryRequest;
 import org.hlopes.dto.LibraryEntryResponse;
 import org.hlopes.dto.PaginatedLibraryResponse;
+import org.hlopes.dto.UpdateLibraryRequest;
 import org.hlopes.service.LibraryService;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -32,9 +33,27 @@ public class LibraryResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response add(@Valid AddToLibraryRequest request) {
         String email = jwt.getSubject();
-        LibraryEntryResponse created = libraryService.add(email, request.externalId(), request.mediaType());
+        LibraryEntryResponse created = libraryService.add(
+                email, request.externalId(), request.mediaType(), request.status(), request.rating());
 
         return Response.status(Response.Status.CREATED).entity(created).build();
+    }
+
+    @PATCH
+    @Path("/{id}")
+    @RolesAllowed("User")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public LibraryEntryResponse update(@PathParam("id") java.util.UUID id, UpdateLibraryRequest request) {
+        String email = jwt.getSubject();
+
+        if (request == null) {
+            throw new jakarta.ws.rs.WebApplicationException(
+                    jakarta.ws.rs.core.Response.status(jakarta.ws.rs.core.Response.Status.BAD_REQUEST)
+                            .entity(java.util.Map.of("error", "status or rating must be provided"))
+                            .build());
+        }
+        return libraryService.update(email, id, request.status(), request.rating());
     }
 
     @GET

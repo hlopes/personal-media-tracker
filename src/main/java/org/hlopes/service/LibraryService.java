@@ -39,6 +39,12 @@ public class LibraryService {
 
     @Transactional
     public LibraryEntryResponse add(String email, Long externalId, String rawMediaType) {
+        return add(email, externalId, rawMediaType, null, null);
+    }
+
+    @Transactional
+    public LibraryEntryResponse add(
+            String email, Long externalId, String rawMediaType, String rawStatus, Integer rating) {
         String normalizedEmail = email == null ? null : email.trim().toLowerCase();
         User user = userRepository
                 .findByEmail(normalizedEmail)
@@ -59,16 +65,27 @@ public class LibraryService {
                     .build());
         }
 
+        Status status = Status.WISHLIST;
+
+        if (rawStatus != null && !rawStatus.isBlank()) {
+            try {
+                status = Status.valueOf(rawStatus.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "invalid status"))
+                        .build());
+            }
+        }
+
+        validateRatingForStatus(status, rating);
+
         MediaItem mediaItem = mediaItemRepository
                 .findByExternalIdAndMediaType(externalId, mediaType)
                 .orElse(null);
 
         if (mediaItem == null) {
-            // Try to lazy-create via Catalog detail (requires TMDB); if fails, return 404
-
             try {
                 var detail = catalogService.detail(normalized, externalId);
-                // detail call already created MediaItem; fetch again
                 mediaItem = mediaItemRepository
                         .findByExternalIdAndMediaType(externalId, mediaType)
                         .orElseThrow(() -> new WebApplicationException(Response.status(404)
@@ -84,15 +101,17 @@ public class LibraryService {
         }
 
         if (libraryEntryRepository.existsByUserIdAndMediaItemId(user.id, mediaItem.id)) {
+            String msg = status == Status.COMPLETED ? "already in library" : "already in wishlist";
             throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
-                    .entity(Map.of("error", "already in wishlist"))
+                    .entity(Map.of("error", msg))
                     .build());
         }
 
         LibraryEntry entry = new LibraryEntry();
         entry.user = user;
         entry.mediaItem = mediaItem;
-        entry.status = Status.WISHLIST;
+        entry.status = status;
+        entry.rating = rating;
         libraryEntryRepository.persist(entry);
 
         MediaItemDto mediaItemDto = new MediaItemDto(
@@ -105,7 +124,7 @@ public class LibraryService {
                 mediaItem.backdropPath,
                 mediaItem.releaseDate);
 
-        return new LibraryEntryResponse(entry.id, entry.status.name(), mediaItemDto, entry.createdAt);
+        return new LibraryEntryResponse(entry.id, entry.status.name(), mediaItemDto, entry.createdAt, entry.rating);
     }
 
     public List<LibraryEntryResponse> list(String email, String statusParam, int page, int size) {
@@ -146,7 +165,8 @@ public class LibraryService {
                                 e.mediaItem.posterPath,
                                 e.mediaItem.backdropPath,
                                 e.mediaItem.releaseDate),
-                        e.createdAt))
+                        e.createdAt,
+                        e.rating))
                 .toList();
     }
 
@@ -171,6 +191,105 @@ public class LibraryService {
         }
 
         return libraryEntryRepository.countByUserIdAndStatus(user.id, status);
+    }
+
+    @Transactional
+    public LibraryEntryResponse update(String email, UUID entryId, String rawStatus, Integer rating) {
+        String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+        User user = userRepository
+                .findByEmail(normalizedEmail)
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("error", "user not found"))
+                        .build()));
+
+        LibraryEntry entry = libraryEntryRepository
+                .findByIdAndUserId(entryId, user.id)
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("error", "entry not found"))
+                        .build()));
+
+        Status targetStatus = entry.status;
+        boolean statusProvided = rawStatus != null && !rawStatus.isBlank();
+
+        if (statusProvided) {
+            try {
+                targetStatus = Status.valueOf(rawStatus.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "invalid status"))
+                        .build());
+            }
+        }
+
+        Integer targetRating = rating;
+        boolean ratingProvided = rating != null;
+
+        if (!ratingProvided && !statusProvided) {
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "status or rating must be provided"))
+                    .build());
+        }
+
+        if (!ratingProvided) {
+            if (targetStatus == Status.COMPLETED && entry.rating == null) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "rating required for COMPLETED"))
+                        .build());
+            }
+            if (targetStatus == Status.COMPLETED) {
+                targetRating = entry.rating;
+            } else if (targetStatus == Status.WISHLIST) {
+                targetRating = null;
+            } else {
+                targetRating = entry.rating;
+            }
+        }
+
+        validateRatingForStatus(targetStatus, targetRating);
+
+        entry.status = targetStatus;
+        entry.rating = targetRating;
+        libraryEntryRepository.persist(entry);
+
+        MediaItem mediaItem = entry.mediaItem;
+        MediaItemDto mediaItemDto = new MediaItemDto(
+                mediaItem.id,
+                mediaItem.externalId,
+                mediaItem.mediaType.name(),
+                mediaItem.title,
+                mediaItem.synopsis,
+                mediaItem.posterPath,
+                mediaItem.backdropPath,
+                mediaItem.releaseDate);
+
+        return new LibraryEntryResponse(entry.id, entry.status.name(), mediaItemDto, entry.createdAt, entry.rating);
+    }
+
+    private void validateRatingForStatus(Status status, Integer rating) {
+        if (status == Status.COMPLETED) {
+            if (rating == null) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "rating required for COMPLETED"))
+                        .build());
+            }
+            if (rating < 1 || rating > 5) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "rating must be between 1 and 5"))
+                        .build());
+            }
+        } else if (status == Status.WISHLIST) {
+            if (rating != null) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "rating not allowed for WISHLIST"))
+                        .build());
+            }
+        } else {
+            if (rating != null && (rating < 1 || rating > 5)) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "rating must be between 1 and 5"))
+                        .build());
+            }
+        }
     }
 
     @Transactional
