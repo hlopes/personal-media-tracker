@@ -1,5 +1,6 @@
 package org.hlopes.library.dto;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -11,5 +12,6 @@ public record SeasonProgressResponse(
         String posterPath,
         LocalDate airDate,
         int episodeCount,
-        long watchedCount,
-        long totalEpisodes) {}
+        boolean watched,
+        Integer rating,
+        Instant watchedAt) {}

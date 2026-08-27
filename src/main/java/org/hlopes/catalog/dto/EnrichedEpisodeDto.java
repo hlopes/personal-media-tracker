@@ -11,7 +11,4 @@ public record EnrichedEpisodeDto(
         String synopsis,
         String stillPath,
         LocalDate airDate,
-        Integer runtime,
-        boolean watched,
-        Integer rating,
-        boolean future) {}
+        Integer runtime) {}

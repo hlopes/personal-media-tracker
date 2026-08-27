@@ -20,13 +20,41 @@
             <div class="h-20 w-14 bg-zinc-100 border border-zinc-200 rounded-sm flex-shrink-0"></div>
             {/if}
             <div class="min-w-0 flex-1">
-                <div class="text-sm font-medium truncate"><a href="/media/{#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}/{entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a></div>
+                <div class="text-sm font-medium truncate flex items-start justify-between">
+                    <a href="/media/{#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}/{entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a>
+                    <button data-entry-id="{entry.id}" class="remove-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
+                </div>
                 <div class="text-xs font-mono text-zinc-500">{entry.mediaItem.mediaType}{#if entry.mediaItem.releaseDate} · {entry.mediaItem.releaseDate}{/if}</div>
                 {#if entry.mediaItem.mediaType == 'TV_SERIES'}
-                {#if progressMap.get(entry.mediaItem.id)}
-                <div class="text-xs text-zinc-500 mt-1">Progress: {progressMap.get(entry.mediaItem.id).get('watchedEpisodes')}/{progressMap.get(entry.mediaItem.id).get('totalEpisodes')} eps</div>
-                {/if}
-                {/if}
+                    {#if progressMap.get(entry.mediaItem.id)}
+                    <div class="text-xs text-zinc-600 mt-1">
+                        <div class="font-mono text-zinc-500">{progressMap.get(entry.mediaItem.id).get('watchedSeasons')}/{progressMap.get(entry.mediaItem.id).get('totalSeasons')} seasons watched</div>
+                        <div class="mt-1 flex flex-wrap gap-1">
+                            {#for s in progressMap.get(entry.mediaItem.id).get('seasons')}
+                                {#if s.season.seasonNumber != 0}
+                                <span class="inline-flex items-center gap-1 text-xs font-mono border rounded-sm px-1.5 py-0.5 {#if s.watched}bg-amber-100 text-amber-900 border-amber-300{#else}bg-white text-zinc-500 border-zinc-200{/if}">
+                                    S{s.season.seasonNumber}
+                                    {#if s.watched}✓{/if}
+                                    {#if s.watched && s.rating}
+                                        <span class="text-amber-600">
+                                            {#if s.rating == 5}★★★★★{/if}
+                                            {#if s.rating == 4}★★★★☆{/if}
+                                            {#if s.rating == 3}★★★☆☆{/if}
+                                            {#if s.rating == 2}★★☆☆☆{/if}
+                                            {#if s.rating == 1}★☆☆☆☆{/if}
+                                        </span>
+                                    {#else if s.watched}
+                                        <span class="text-zinc-500"></span>
+                                    {#else}
+                                        <span class="text-zinc-400">○</span>
+                                    {/if}
+                                </span>
+                                {/if}
+                            {/for}
+                        </div>
+                    </div>
+                    {/if}
+                {#else}
                 <div class="text-sm text-amber-500 tracking-tight mt-1">
                     {#if entry.rating == 5}★★★★★{/if}
                     {#if entry.rating == 4}★★★★☆{/if}
@@ -42,8 +70,7 @@
                     <button data-rate="4" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">4★</button>
                     <button data-rate="5" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">5★</button>
                 </div>
-                <div class="text-xs font-mono text-zinc-400 mt-1">added {entry.createdAt}</div>
-                <button data-entry-id="{entry.id}" class="remove-btn mt-2 text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
+                {/if}
             </div>
         </div>
         {/for}

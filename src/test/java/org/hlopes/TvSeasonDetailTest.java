@@ -31,17 +31,17 @@ public class TvSeasonDetailTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
         String token = userRepository.findByEmail(email.toLowerCase()).orElseThrow().verificationToken;
-        given().when().get("/api/auth/verify?token=" + token).then().statusCode(200);
+        given().when().get("/api/helpers/auth/verify?token=" + token).then().statusCode(200);
 
         return given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/login")
+                .post("/api/helpers/auth/login")
                 .then()
                 .statusCode(200)
                 .extract()

@@ -112,13 +112,37 @@
                     <img src="{imageBase}/w185{sw.season.posterPath}" alt="Poster for {sw.season.name}" class="h-24 w-16 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />
                     {/if}
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-sm font-medium">{sw.season.name}</span>
-                            <span class="text-xs font-mono text-zinc-500">Season {sw.season.seasonNumber} · {sw.episodes.size} episodes · {sw.watchedCount} watched</span>
+                            <span class="text-xs font-mono text-zinc-500">Season {sw.season.seasonNumber} · {sw.season.episodeCount} episodes</span>
+                            {#if sw.watched}
+                            <span class="text-xs font-mono bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-sm">Watched ✓</span>
+                            {#if sw.rating}
+                            <span class="text-xs text-amber-600">
+                                {#if sw.rating == 5}★★★★★{/if}
+                                {#if sw.rating == 4}★★★★☆{/if}
+                                {#if sw.rating == 3}★★★☆☆{/if}
+                                {#if sw.rating == 2}★★☆☆☆{/if}
+                                {#if sw.rating == 1}★☆☆☆☆{/if}
+                                <span class="font-mono text-zinc-600">({sw.rating}/5)</span>
+                            </span>
+                            {/if}
+                            {#else}
+                            <span class="text-xs font-mono border border-zinc-200 px-1.5 py-0.5 rounded-sm text-zinc-500">Not watched</span>
+                            {/if}
                             {#if sw.season.airDate}<span class="text-xs font-mono text-zinc-400">{sw.season.airDate}</span>{/if}
                         </div>
                         {#if sw.season.overview}<p class="mt-1 text-xs text-zinc-600 line-clamp-2">{sw.season.overview}</p>{/if}
-                        <div class="mt-2 flex items-center gap-2 flex-wrap season-actions" data-season-number="{sw.season.seasonNumber}">
+                        <div class="mt-2 flex items-center gap-2 flex-wrap season-actions" data-season-number="{sw.season.seasonNumber}" data-watched="{sw.watched}">
+                            {#if sw.watched}
+                            <button class="season-unwatch text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-season="{sw.season.seasonNumber}">Unmark Season</button>
+                            <span class="text-xs font-mono text-zinc-400">update rating</span>
+                            <button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if sw.rating == 1}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-season="{sw.season.seasonNumber}" data-rate="1">1★</button>
+                            <button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if sw.rating == 2}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-season="{sw.season.seasonNumber}" data-rate="2">2★</button>
+                            <button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if sw.rating == 3}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-season="{sw.season.seasonNumber}" data-rate="3">3★</button>
+                            <button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if sw.rating == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-season="{sw.season.seasonNumber}" data-rate="4">4★</button>
+                            <button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if sw.rating == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-season="{sw.season.seasonNumber}" data-rate="5">5★</button>
+                            {#else}
                             <button class="season-watch-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-season="{sw.season.seasonNumber}">Mark Season as Watched</button>
                             <span class="text-xs font-mono text-zinc-400">or rate</span>
                             <button class="season-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-season="{sw.season.seasonNumber}" data-rate="1">1★</button>
@@ -126,6 +150,7 @@
                             <button class="season-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-season="{sw.season.seasonNumber}" data-rate="3">3★</button>
                             <button class="season-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-season="{sw.season.seasonNumber}" data-rate="4">4★</button>
                             <button class="season-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-season="{sw.season.seasonNumber}" data-rate="5">5★</button>
+                            {/if}
                         </div>
                     </div>
                     <span class="text-xs font-mono text-zinc-400 self-center">▼</span>
@@ -136,7 +161,7 @@
                     {#else}
                     <div class="space-y-2 mt-2">
                         {#for ep in sw.episodes}
-                        <div class="flex gap-3 p-3 bg-white border border-zinc-200 rounded-sm episode-row" data-episode-id="{ep.id}" data-future="{ep.future}">
+                        <div class="flex gap-3 p-3 bg-white border border-zinc-200 rounded-sm episode-row">
                             {#if ep.stillPath}
                             <img src="{imageBase}/w300{ep.stillPath}" alt="Still for {ep.title}" class="h-16 w-28 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />
                             {/if}
@@ -144,44 +169,10 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs font-mono text-zinc-500">E{ep.episodeNumber}</span>
                                     <span class="text-sm font-medium truncate">{ep.title}</span>
-                                    {#if ep.watched}<span class="text-xs font-mono bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-sm">Watched ✓</span>{/if}
                                 </div>
                                 {#if ep.airDate}<span class="text-xs font-mono text-zinc-400">{ep.airDate}</span>{/if}
                                 {#if ep.synopsis}<p class="mt-1 text-xs text-zinc-600 line-clamp-2">{ep.synopsis}</p>{/if}
                                 {#if ep.runtime}<span class="text-xs font-mono text-zinc-400">{ep.runtime} min</span>{/if}
-                                {#if ep.watched && ep.rating}
-                                <div class="mt-1 text-xs text-amber-600">
-                                    {#if ep.rating == 5}★★★★★{/if}
-                                    {#if ep.rating == 4}★★★★☆{/if}
-                                    {#if ep.rating == 3}★★★☆☆{/if}
-                                    {#if ep.rating == 2}★★☆☆☆{/if}
-                                    {#if ep.rating == 1}★☆☆☆☆{/if}
-                                    <span class="font-mono text-zinc-600">({ep.rating}/5)</span>
-                                </div>
-                                {/if}
-                            </div>
-                            <div class="flex flex-col gap-1 self-start items-end">
-                                {#if ep.future}
-                                <span class="text-xs font-mono border border-zinc-200 bg-zinc-100 text-zinc-500 px-2 py-1 rounded-sm" title="Not yet aired">Not yet aired</span>
-                                {#else if ep.watched}
-                                <div class="flex gap-1 episode-rating" data-episode-id="{ep.id}">
-                                    <button class="episode-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if ep.rating == 1}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-episode-id="{ep.id}" data-rate="1">1★</button>
-                                    <button class="episode-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if ep.rating == 2}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-episode-id="{ep.id}" data-rate="2">2★</button>
-                                    <button class="episode-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if ep.rating == 3}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-episode-id="{ep.id}" data-rate="3">3★</button>
-                                    <button class="episode-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if ep.rating == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-episode-id="{ep.id}" data-rate="4">4★</button>
-                                    <button class="episode-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 {#if ep.rating == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}" data-episode-id="{ep.id}" data-rate="5">5★</button>
-                                </div>
-                                <button class="episode-unwatch text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-episode-id="{ep.id}">Unmark</button>
-                                {#else}
-                                <button class="episode-watch-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-episode-id="{ep.id}">Mark as Watched</button>
-                                <div class="flex gap-1 episode-rate-picker" data-episode-id="{ep.id}">
-                                    <button class="episode-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-episode-id="{ep.id}" data-rate="1">1★</button>
-                                    <button class="episode-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-episode-id="{ep.id}" data-rate="2">2★</button>
-                                    <button class="episode-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-episode-id="{ep.id}" data-rate="3">3★</button>
-                                    <button class="episode-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-episode-id="{ep.id}" data-rate="4">4★</button>
-                                    <button class="episode-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-episode-id="{ep.id}" data-rate="5">5★</button>
-                                </div>
-                                {/if}
                             </div>
                         </div>
                         {/for}
@@ -277,45 +268,6 @@ function ensureEntryId() {
       return r.json().then(j=> { throw new Error(j.error||'Failed to create entry'); });
     });
 }
-document.querySelectorAll('.episode-watch-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const episodeId = btn.getAttribute('data-episode-id');
-    ensureEntryId().then(entryId=>{
-      fetch('/api/me/library/'+entryId+'/episodes/'+episodeId+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({})})
-        .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
-        .catch(()=>alert('Failed'));
-    }).catch(e=>alert(e.message||'Failed'));
-  });
-});
-document.querySelectorAll('.episode-star').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const episodeId = btn.getAttribute('data-episode-id');
-    const rating = Number(btn.getAttribute('data-rate'));
-    const isUnwatchPresent = document.querySelector('.episode-unwatch[data-episode-id="'+episodeId+'"]') !== null;
-    ensureEntryId().then(entryId=>{
-      if (isUnwatchPresent) {
-        fetch('/api/me/library/'+entryId+'/episodes/'+episodeId+'/watch', { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
-          .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
-          .catch(()=>alert('Failed'));
-      } else {
-        fetch('/api/me/library/'+entryId+'/episodes/'+episodeId+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
-          .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
-          .catch(()=>alert('Failed'));
-      }
-    }).catch(e=>alert(e.message||'Failed'));
-  });
-});
-document.querySelectorAll('.episode-unwatch').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    if(!confirm('Unmark episode?')) return;
-    const episodeId = btn.getAttribute('data-episode-id');
-    const entryId = getEntryId();
-    if(!entryId){ alert('No library entry'); return; }
-    fetch('/api/me/library/'+entryId+'/episodes/'+episodeId+'/watch', { method:'DELETE', credentials:'include'})
-      .then(r=>{ if(r.status===204) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
-      .catch(()=>alert('Failed'));
-  });
-});
 document.querySelectorAll('.season-watch-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const seasonNum = btn.getAttribute('data-season');
@@ -330,11 +282,30 @@ document.querySelectorAll('.season-star').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const seasonNum = btn.getAttribute('data-season');
     const rating = Number(btn.getAttribute('data-rate'));
+    const row = btn.closest('.season-actions');
+    const alreadyWatched = row && row.getAttribute('data-watched') === 'true';
     ensureEntryId().then(entryId=>{
-      fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
-        .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
-        .catch(()=>alert('Failed'));
+      if (alreadyWatched) {
+        fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
+          .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
+          .catch(()=>alert('Failed'));
+      } else {
+        fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
+          .then(r=>{ if(r.ok) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
+          .catch(()=>alert('Failed'));
+      }
     }).catch(e=>alert(e.message||'Failed'));
+  });
+});
+document.querySelectorAll('.season-unwatch').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(!confirm('Unmark season?')) return;
+    const seasonNum = btn.getAttribute('data-season');
+    const entryId = getEntryId();
+    if(!entryId){ alert('No library entry'); return; }
+    fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'DELETE', credentials:'include'})
+      .then(r=>{ if(r.status===204) window.location.reload(); else return r.json().then(j=>alert(j.error||'Failed')); })
+      .catch(()=>alert('Failed'));
   });
 });
 </script>
