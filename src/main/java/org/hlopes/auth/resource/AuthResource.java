@@ -3,7 +3,6 @@ package org.hlopes.auth.resource;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -185,32 +184,6 @@ public class AuthResource {
         return Response.seeOther(URI.create("/login?message=" + encode("Logged out")))
                 .cookie(clear)
                 .build();
-    }
-
-    private String extractError(WebApplicationException e) {
-        try {
-            Object entity = e.getResponse().getEntity();
-
-            if (entity instanceof Map) {
-                Object err = ((Map<?, ?>) entity).get("error");
-
-                if (err != null) {
-                    return err.toString();
-                }
-            }
-
-            if (entity != null) {
-                return entity.toString();
-            }
-
-        } catch (Exception ignored) {
-        }
-
-        if (e.getMessage() != null) {
-            return e.getMessage();
-        }
-
-        return "Request failed";
     }
 
     private String encode(String s) {

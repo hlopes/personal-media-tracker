@@ -3,6 +3,7 @@ package org.hlopes;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.hlopes.auth.repository.UserRepository;
@@ -23,7 +24,7 @@ public class TvSeasonDetailTest {
     TestDataHelper testDataHelper;
 
     private long nextExternalId() {
-        return 200000L + Math.abs(new java.util.Random().nextInt(9000000));
+        return 200000L + Math.abs(new Random().nextInt(9000000));
     }
 
     private String registerAndGetJwt(String email, String password) {
@@ -66,8 +67,8 @@ public class TvSeasonDetailTest {
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
         var mediaItem = testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Test Show " + externalId);
-        var season1 = testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 2);
-        var specials = testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);
+        testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 2);
+        testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);
 
         // first GET should contain seasons and episodes, specials at bottom
         given().header("Authorization", "Bearer " + jwt)

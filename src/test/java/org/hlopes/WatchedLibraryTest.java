@@ -3,6 +3,7 @@ package org.hlopes;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.hlopes.auth.repository.UserRepository;
@@ -23,7 +24,7 @@ public class WatchedLibraryTest {
     TestDataHelper testDataHelper;
 
     private long nextExternalId() {
-        return 100000L + Math.abs(new java.util.Random().nextInt(9000000));
+        return 100000L + Math.abs(new Random().nextInt(9000000));
     }
 
     private String registerAndGetJwt(String email, String password) {
@@ -443,15 +444,13 @@ public class WatchedLibraryTest {
         Long extNone = nextExternalId();
         testDataHelper.createMediaItem(extNone, MediaTypeEnum.MOVIE, "Detail None Movie");
 
-        String wishlistId = given().header("Authorization", "Bearer " + jwt)
+        given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
                 .body("{\"externalId\":" + extWishlist + ",\"mediaType\":\"movie\"}")
                 .when()
                 .post("/api/me/library")
                 .then()
-                .statusCode(201)
-                .extract()
-                .path("id");
+                .statusCode(201);
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)

@@ -7,4 +7,11 @@
 
     <!-- Avoid using fully qualified class names inside code; use imports unless there is a name conflict -->
     <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
+    <!-- Remove unnecessary variable declarations: e.g. `String x = foo(); return x;` => `return foo();` -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
+    <!-- Remove unused local variables / private fields / methods -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
 </ruleset>
