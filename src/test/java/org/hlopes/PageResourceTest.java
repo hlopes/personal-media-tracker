@@ -3,6 +3,8 @@ package org.hlopes;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -50,7 +52,7 @@ public class PageResourceTest {
 
     @Test
     public void testRegisterFormRedirectsToVerificationSent() {
-        String email = "page-" + java.util.UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+        String email = "page-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         given().redirects()
                 .follow(false)
                 .contentType(ContentType.URLENC)
@@ -65,7 +67,7 @@ public class PageResourceTest {
 
     @Test
     public void testLoginFormSetsCookieAndRedirectsToApp() {
-        String email = "login-" + java.util.UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+        String email = "login-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String password = "password123";
 
         // Register via API
