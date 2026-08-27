@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 import java.time.LocalDate;
+import java.util.Random;
 import java.util.UUID;
 
 import org.hlopes.auth.repository.UserRepository;
@@ -24,7 +25,7 @@ public class EpisodeWatchVerificationTest {
     TestDataHelper testDataHelper;
 
     private long nextExternalId() {
-        return 300000L + Math.abs(new java.util.Random().nextInt(9000000));
+        return 300000L + Math.abs(new Random().nextInt(9000000));
     }
 
     private String registerAndGetJwt(String email, String password) {
@@ -135,7 +136,7 @@ public class EpisodeWatchVerificationTest {
     @Test
     public void testUnairedEpisodeBlocked() {
         String email = "verify-unaired-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
-        String jwt = registerAndGetJwt(email, "password123");
+        registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
         var mediaItem = testDataHelper.createMediaItem(
                 externalId, MediaTypeEnum.TV_SERIES, "Verify Unaired Show " + externalId);

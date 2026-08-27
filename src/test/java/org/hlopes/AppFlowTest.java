@@ -61,6 +61,7 @@ public class AppFlowTest {
                 .path("accessToken");
         System.out.println("JWT from login: " + jwt.substring(0, 20) + "...");
         String[] parts = jwt.split("\\.");
+
         if (parts.length == 3) {
             String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
             System.out.println("JWT payload: " + payload);
