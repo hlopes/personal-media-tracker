@@ -9,6 +9,11 @@
   <module name="TreeWalker">
     <!-- Forbid single-statement if without braces (already handled by palantir, but extra safety) -->
     <module name="NeedBraces"/>
+    <!-- private methods must be after all non-private methods - no public/protected/package method after a private one -->
+    <module name="MatchXpath">
+      <property name="query" value="//METHOD_DEF[.//LITERAL_PRIVATE and following-sibling::METHOD_DEF[not(.//LITERAL_PRIVATE)]]"/>
+      <message key="matchxpath.match" value="Private methods must be at the end of the class"/>
+    </module>
   </module>
 
   <!-- Require blank line before return unless it's the only statement in the block (directly after {) -->
@@ -22,6 +27,8 @@
     <property name="format" value="[^ \{\}\r\n]\r?\n[ \t]*(?:if|else|for|while|try|catch|finally|synchronized|do)\b[^\n]*\{"/>
     <property name="message" value="Add blank line before block"/>
   </module>
+
+
 
   <!-- Also check header if needed -->
 </module>

@@ -57,6 +57,7 @@ public class PageResource {
 
             return Response.ok(instance).build();
         } catch (Exception e) {
+            // For browser HTML, redirect to login instead of raw 401
             String msg = URLEncoder.encode("Please login to access your library", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/login?error=" + msg)).build();

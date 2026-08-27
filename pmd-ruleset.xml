@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="personal-media-tracker"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>PMD ruleset for personal-media-tracker - enforces AGENTS.md import style</description>
+
+    <!-- Avoid using fully qualified class names inside code; use imports unless there is a name conflict -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName"/>
+    <!-- Remove unnecessary variable declarations: e.g. `String x = foo(); return x;` => `return foo();` -->
+    <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
+    <!-- Remove unused local variables / private fields / methods -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+</ruleset>

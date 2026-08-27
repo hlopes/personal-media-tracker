@@ -35,8 +35,9 @@ public class TestDataHelper {
         item.synopsis = "Synopsis for " + title;
         item.posterPath = "/poster.jpg";
         item.backdropPath = "/backdrop.jpg";
-        item.releaseDate = java.time.LocalDate.of(2020, 1, 1);
+        item.releaseDate = LocalDate.of(2020, 1, 1);
         mediaItemRepository.persist(item);
+
         return item;
     }
 
@@ -56,6 +57,7 @@ public class TestDataHelper {
         season.airDate = LocalDate.of(2020, 1, 1);
         season.episodeCount = 0;
         tvSeasonRepository.persist(season);
+
         return season;
     }
 
@@ -73,15 +75,18 @@ public class TestDataHelper {
         ep.runtime = 45;
         tvEpisodeRepository.persist(ep);
         season.episodeCount = tvEpisodeRepository.findBySeasonId(season.id).size();
+
         return ep;
     }
 
     @Transactional
     public TvSeason createTvSeasonWithEpisodes(MediaItem mediaItem, int seasonNumber, String name, int episodeCount) {
         TvSeason season = createTvSeason(mediaItem, seasonNumber, name);
+
         for (int i = 1; i <= episodeCount; i++) {
             createTvEpisode(season, i, "Episode " + i + " of " + name);
         }
+
         return season;
     }
 }

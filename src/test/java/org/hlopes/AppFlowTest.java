@@ -3,6 +3,7 @@ package org.hlopes;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
+import java.util.Base64;
 import java.util.UUID;
 
 import org.hlopes.auth.repository.UserRepository;
@@ -60,8 +61,9 @@ public class AppFlowTest {
                 .path("accessToken");
         System.out.println("JWT from login: " + jwt.substring(0, 20) + "...");
         String[] parts = jwt.split("\\.");
+
         if (parts.length == 3) {
-            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
             System.out.println("JWT payload: " + payload);
         }
 

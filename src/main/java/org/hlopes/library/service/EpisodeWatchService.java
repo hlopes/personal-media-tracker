@@ -84,7 +84,7 @@ public class EpisodeWatchService {
     public List<EpisodeWithWatchResponse> getEpisodesWithWatch(String email, UUID libraryEntryId, int seasonNumber) {
         User user = requireUser(email);
         LibraryEntry entry = requireLibraryEntry(user, libraryEntryId);
-        TvSeason season = tvSeasonRepository
+        tvSeasonRepository
                 .findByMediaItemIdAndSeasonNumber(entry.mediaItem.id, seasonNumber)
                 .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
                         .entity(Map.of("error", "season not found"))
@@ -210,7 +210,7 @@ public class EpisodeWatchService {
     public List<EpisodeWatchResponse> watchSeason(String email, UUID libraryEntryId, int seasonNumber, Integer rating) {
         User user = requireUser(email);
         LibraryEntry entry = requireLibraryEntry(user, libraryEntryId);
-        TvSeason season = tvSeasonRepository
+        tvSeasonRepository
                 .findByMediaItemIdAndSeasonNumber(entry.mediaItem.id, seasonNumber)
                 .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
                         .entity(Map.of("error", "season not found"))
