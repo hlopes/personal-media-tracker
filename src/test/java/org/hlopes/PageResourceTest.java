@@ -59,7 +59,7 @@ public class PageResourceTest {
                 .formParam("email", email)
                 .formParam("password", "password123")
                 .when()
-                .post("/api/register")
+                .post("/api/auth/register")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/verification-sent"));
@@ -74,7 +74,7 @@ public class PageResourceTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
@@ -91,7 +91,7 @@ public class PageResourceTest {
                 .formParam("email", email)
                 .formParam("password", password)
                 .when()
-                .post("/api/login")
+                .post("/api/auth/login")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/login?error="))

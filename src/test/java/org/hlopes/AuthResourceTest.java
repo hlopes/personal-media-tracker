@@ -22,7 +22,7 @@ public class AuthResourceTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201)
                 .body("message", containsString("registered"));
@@ -31,7 +31,7 @@ public class AuthResourceTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/login")
+                .post("/api/helpers/auth/login")
                 .then()
                 .statusCode(403)
                 .body("code", is("VERIFICATION_REQUIRED"));
@@ -46,12 +46,15 @@ public class AuthResourceTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\"}")
                 .when()
-                .post("/api/auth/resend-verification")
+                .post("/api/helpers/auth/resend-verification")
                 .then()
                 .statusCode(200);
 
         // 4. Verify with wrong token -> 400
-        given().when().get("/api/auth/verify?token=invalid-token").then().statusCode(400);
+        given().when()
+                .get("/api/helpers/auth/verify?token=invalid-token")
+                .then()
+                .statusCode(400);
 
         // Note: full verify + login + /api/me flow is tested in AuthIntegrationTest with repository
         // access
@@ -62,7 +65,7 @@ public class AuthResourceTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"not-an-email\",\"password\":\"short\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(400);
     }

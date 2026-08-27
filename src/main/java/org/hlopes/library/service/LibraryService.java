@@ -13,8 +13,8 @@ import org.hlopes.catalog.repository.MediaItemRepository;
 import org.hlopes.library.dto.LibraryEntryResponse;
 import org.hlopes.library.entity.LibraryEntry;
 import org.hlopes.library.entity.StatusEnum;
-import org.hlopes.library.repository.EpisodeWatchRepository;
 import org.hlopes.library.repository.LibraryEntryRepository;
+import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,7 +35,7 @@ public class LibraryService {
     LibraryEntryRepository libraryEntryRepository;
 
     @Inject
-    EpisodeWatchRepository episodeWatchRepository;
+    SeasonWatchRepository seasonWatchRepository;
 
     @Transactional
     public LibraryEntryResponse add(String email, Long externalId, String rawMediaType) {
@@ -243,7 +243,7 @@ public class LibraryService {
                     && targetStatus == StatusEnum.COMPLETED
                     && entry.mediaItem.mediaType == MediaTypeEnum.TV_SERIES
                     && entry.rating == null) {
-                long existingWatches = episodeWatchRepository.countByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
+                long existingWatches = seasonWatchRepository.countByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
 
                 if (existingWatches == 0) {
                     throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
@@ -295,11 +295,11 @@ public class LibraryService {
                         .entity(Map.of("error", "entry not found"))
                         .build()));
 
-        // cascade delete episode watches for TV series
+        // cascade delete season watches for TV series
 
         try {
             if (entry.mediaItem != null && entry.mediaItem.mediaType == MediaTypeEnum.TV_SERIES) {
-                episodeWatchRepository.deleteByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
+                seasonWatchRepository.deleteByUserIdAndMediaItemId(user.id, entry.mediaItem.id);
             }
         } catch (Exception ignored) {
         }

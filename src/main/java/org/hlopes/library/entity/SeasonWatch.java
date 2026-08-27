@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hlopes.auth.entity.User;
-import org.hlopes.catalog.entity.TvEpisode;
+import org.hlopes.catalog.entity.TvSeason;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
@@ -16,20 +16,20 @@ import lombok.Setter;
 
 @Entity
 @Table(
-        name = "episode_watches",
+        name = "season_watches",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uk_episode_watches_user_episode",
-                    columnNames = {"user_id", "episode_id"})
+                    name = "uk_season_watches_user_season",
+                    columnNames = {"user_id", "season_id"})
         },
         indexes = {
-            @Index(name = "ix_episode_watches_user", columnList = "user_id"),
-            @Index(name = "ix_episode_watches_episode", columnList = "episode_id")
+            @Index(name = "ix_season_watches_user", columnList = "user_id"),
+            @Index(name = "ix_season_watches_season", columnList = "season_id")
         })
 @Getter
 @Setter
 @NoArgsConstructor
-public class EpisodeWatch extends PanacheEntityBase {
+public class SeasonWatch extends PanacheEntityBase {
 
     @Id
     @GeneratedValue
@@ -41,8 +41,8 @@ public class EpisodeWatch extends PanacheEntityBase {
     public User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "episode_id", nullable = false)
-    public TvEpisode episode;
+    @JoinColumn(name = "season_id", nullable = false)
+    public TvSeason season;
 
     @Column(name = "rating")
     public Integer rating;

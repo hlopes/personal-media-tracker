@@ -3,7 +3,6 @@ package org.hlopes.library.resource;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,8 +17,8 @@ import org.hlopes.catalog.dto.EnrichedSeasonDto;
 import org.hlopes.catalog.dto.MediaItemDto;
 import org.hlopes.catalog.dto.SeasonWithEpisodesDto;
 import org.hlopes.catalog.service.TvSeasonService;
-import org.hlopes.library.entity.EpisodeWatch;
-import org.hlopes.library.repository.EpisodeWatchRepository;
+import org.hlopes.library.entity.SeasonWatch;
+import org.hlopes.library.repository.SeasonWatchRepository;
 import org.hlopes.library.service.LibraryService;
 
 import io.quarkus.qute.Location;
@@ -53,7 +52,7 @@ public class PageResource {
     TvSeasonService tvSeasonService;
 
     @Inject
-    EpisodeWatchRepository episodeWatchRepository;
+    SeasonWatchRepository seasonWatchRepository;
 
     @Inject
     @Location("library/wishlist")
@@ -112,10 +111,6 @@ public class PageResource {
             Map<UUID, Map<String, Object>> progressMap = new HashMap<>();
 
             try {
-                var user = authService.getUserOrNull(
-                        email == null ? null : email.trim().toLowerCase());
-                UUID userId = user != null ? user.id : null;
-
                 for (var e : entries) {
                     var media = e.mediaItem();
 
@@ -128,24 +123,20 @@ public class PageResource {
                         }
 
                         List<EnrichedSeasonDto> seasons = buildEnrichedSeasons(rawSeasons, media, email);
-                        long totalEpisodes = seasons.stream()
-                                .flatMap(s -> s.episodes().stream())
+                        long totalSeasons = seasons.stream()
+                                .filter(s -> s.season().seasonNumber() != 0)
                                 .count();
-                        long watchedEpisodes = 0L;
-
-                        try {
-                            if (userId != null) {
-                                watchedEpisodes =
-                                        episodeWatchRepository.countByUserIdAndMediaItemId(userId, media.id());
-                            }
-                        } catch (Exception ignored) {
-                        }
+                        long watchedSeasons = seasons.stream()
+                                .filter(s -> s.watched() && s.season().seasonNumber() != 0)
+                                .count();
 
                         progressMap.put(
                                 media.id(),
                                 Map.of(
-                                        "totalEpisodes", totalEpisodes,
-                                        "watchedEpisodes", watchedEpisodes,
+                                        "totalSeasons", totalSeasons,
+                                        "watchedSeasons", watchedSeasons,
+                                        "totalEpisodes", totalSeasons,
+                                        "watchedEpisodes", watchedSeasons,
                                         "seasons", seasons));
                     }
                 }
@@ -175,32 +166,26 @@ public class PageResource {
         if (mediaItemDto == null || mediaItemDto.id() == null) {
             return List.of();
         }
-        // find mediaItem entity id is mediaItemDto.id()
         UUID mediaItemId = mediaItemDto.id();
-        Map<UUID, EpisodeWatch> watchMap = Map.of();
+        Map<UUID, SeasonWatch> watchMap = Map.of();
 
         try {
             if (email != null && !email.isBlank()) {
                 var user = authService.getUserOrNull(email.trim().toLowerCase());
 
                 if (user != null) {
-                    var watches = episodeWatchRepository.findByUserIdAndMediaItemId(user.id, mediaItemId);
-                    watchMap = watches.stream().collect(Collectors.toMap(w -> w.episode.id, w -> w, (a, b) -> a));
+                    var watches = seasonWatchRepository.findByUserIdAndMediaItemId(user.id, mediaItemId);
+                    watchMap = watches.stream().collect(Collectors.toMap(w -> w.season.id, w -> w, (a, b) -> a));
                 }
             }
         } catch (Exception ignored) {
         }
         List<EnrichedSeasonDto> result = new ArrayList<>();
-        LocalDate today = LocalDate.now();
 
         for (SeasonWithEpisodesDto sw : rawSeasons) {
             List<EnrichedEpisodeDto> enrichedEps = new ArrayList<>();
 
             for (var epDto : sw.episodes()) {
-                var watch = watchMap.get(epDto.id());
-                boolean watched = watch != null;
-                Integer rating = watched ? watch.rating : null;
-                boolean future = epDto.airDate() != null && epDto.airDate().isAfter(today);
                 enrichedEps.add(new EnrichedEpisodeDto(
                         epDto.id(),
                         epDto.seasonNumber(),
@@ -209,14 +194,13 @@ public class PageResource {
                         epDto.synopsis(),
                         epDto.stillPath(),
                         epDto.airDate(),
-                        epDto.runtime(),
-                        watched,
-                        rating,
-                        future));
+                        epDto.runtime()));
             }
-            long watchedCount =
-                    enrichedEps.stream().filter(EnrichedEpisodeDto::watched).count();
-            result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watchedCount));
+            var watch = watchMap.get(sw.season().id());
+            boolean watched = watch != null;
+            Integer rating = watched ? watch.rating : null;
+            var watchedAt = watched ? watch.watchedAt : null;
+            result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watched, rating, watchedAt));
         }
         return result;
     }
