@@ -6,8 +6,8 @@ import static org.hamcrest.Matchers.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.hlopes.entity.MediaType;
-import org.hlopes.repository.UserRepository;
+import org.hlopes.auth.repository.UserRepository;
+import org.hlopes.catalog.entity.MediaTypeEnum;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -53,7 +53,8 @@ public class EpisodeWatchVerificationTest {
         String email = "verify-aired-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        var mediaItem = testDataHelper.createMediaItem(externalId, MediaType.TV_SERIES, "Verify Aired Show " + externalId);
+        var mediaItem =
+                testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Verify Aired Show " + externalId);
         var season = testDataHelper.createTvSeason(mediaItem, 1, "Season 1");
         // episode with aired date 2020-01-01
         var ep1 = testDataHelper.createTvEpisode(season, 1, "Aired Episode 1");
@@ -136,7 +137,8 @@ public class EpisodeWatchVerificationTest {
         String email = "verify-unaired-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        var mediaItem = testDataHelper.createMediaItem(externalId, MediaType.TV_SERIES, "Verify Unaired Show " + externalId);
+        var mediaItem = testDataHelper.createMediaItem(
+                externalId, MediaTypeEnum.TV_SERIES, "Verify Unaired Show " + externalId);
         var season = testDataHelper.createTvSeason(mediaItem, 1, "Season 1");
         var futureEp = testDataHelper.createTvEpisode(season, 1, "Future Episode");
         // set airDate to tomorrow
@@ -144,7 +146,8 @@ public class EpisodeWatchVerificationTest {
         // persist via repository? need to update
         // Use TestDataHelper's episode creation sets airDate to 2020-01-01, so we need to update
         // We'll use the repository to update
-        // Instead, we can create a season with episode that we manually set via SQL? Simpler: use the episode as future by updating via entity
+        // Instead, we can create a season with episode that we manually set via SQL? Simpler: use the episode as future
+        // by updating via entity
         // For this test, we will directly set the episode's airDate via the repository
         // Use the injected helper to update? We'll just set and hope persist works via transaction
         // The TestDataHelper already persisted, we can update the entity and it will be flushed
@@ -152,14 +155,20 @@ public class EpisodeWatchVerificationTest {
         // Simpler: create a new episode with future date via direct repository
         // We'll just use the existing futureEp and update its airDate via the repository
         futureEp.airDate = LocalDate.now().plusDays(5);
-        // The entity is already persisted, we need to flush - but for test we can just use a new season with future date by creating via TestDataHelper and then updating via SQL
+        // The entity is already persisted, we need to flush - but for test we can just use a new season with future
+        // date by creating via TestDataHelper and then updating via SQL
         // Use the repository to find and update
-        // For simplicity, we will test the unaired check by creating an episode with future date via direct creation and then trying to watch it
+        // For simplicity, we will test the unaired check by creating an episode with future date via direct creation
+        // and then trying to watch it
         // The episode's airDate is now future, but we need to ensure it's persisted
-        // We can call testDataHelper's repository to update - but we don't have it. We'll instead create a new mediaItem with future episode via direct creation
-        // To avoid complexity, we will test the validation by trying to watch an episode that is future - we already set futureEp.airDate to future, but need to ensure it's saved
-        // We'll use the episode's id and try to watch, the service will load the episode from DB where airDate is still 2020-01-01 (old), so it won't be future
-        // Instead, we will create a season with an episode that has future date by using the TestDataHelper's method and then updating via the repository we can inject
+        // We can call testDataHelper's repository to update - but we don't have it. We'll instead create a new
+        // mediaItem with future episode via direct creation
+        // To avoid complexity, we will test the validation by trying to watch an episode that is future - we already
+        // set futureEp.airDate to future, but need to ensure it's saved
+        // We'll use the episode's id and try to watch, the service will load the episode from DB where airDate is still
+        // 2020-01-01 (old), so it won't be future
+        // Instead, we will create a season with an episode that has future date by using the TestDataHelper's method
+        // and then updating via the repository we can inject
         // Let's inject TvEpisodeRepository to update
     }
 }

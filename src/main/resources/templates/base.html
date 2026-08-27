@@ -42,14 +42,14 @@
             <a href="/" class="flex items-center gap-2">
                 <span class="inline-flex h-7 w-7 items-center justify-center border border-zinc-900 bg-zinc-900 text-white text-xs font-semibold">M</span>
                 <span class="text-sm font-semibold tracking-tight">MediaShelf</span>
-                <span class="ml-2 text-xs font-mono text-zinc-500 border border-zinc-200 px-1.5 py-0.5 rounded-sm">0.2.0</span>
+                <span class="ml-2 text-xs font-mono text-zinc-500 border border-zinc-200 px-1.5 py-0.5 rounded-sm">0.3.0</span>
             </a>
             <nav class="hidden sm:flex items-center gap-1 text-sm">
                 {#if currentUser}
+                    <span class="text-zinc-700 font-mono text-xs px-3 py-1.5 border border-zinc-200 bg-zinc-50 rounded-sm">{currentUser}</span>
                     <a href="/wishlist" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Wishlist</a>
                     <a href="/watched" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Watched</a>
-                    <span class="text-zinc-700 font-mono text-xs px-3 py-1.5 border border-zinc-200 bg-zinc-50 rounded-sm">{currentUser}</span>
-                    <form method="post" action="/api/logout" class="inline">
+                    <form method="post" action="/api/auth/logout" class="inline">
                         <button type="submit" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Logout</button>
                     </form>
                 {#else}

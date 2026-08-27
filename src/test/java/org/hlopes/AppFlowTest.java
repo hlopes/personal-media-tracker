@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.*;
 
 import java.util.UUID;
 
-import org.hlopes.repository.UserRepository;
+import org.hlopes.auth.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;

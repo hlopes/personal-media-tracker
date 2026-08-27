@@ -5,8 +5,8 @@ import static org.hamcrest.Matchers.containsString;
 
 import java.util.UUID;
 
-import org.hlopes.entity.MediaType;
-import org.hlopes.repository.UserRepository;
+import org.hlopes.auth.repository.UserRepository;
+import org.hlopes.catalog.entity.MediaTypeEnum;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -65,7 +65,7 @@ public class TvSeasonDetailTest {
         String email = "tvdetail-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        var mediaItem = testDataHelper.createMediaItem(externalId, MediaType.TV_SERIES, "Test Show " + externalId);
+        var mediaItem = testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Test Show " + externalId);
         var season1 = testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 2);
         var specials = testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);
 
@@ -98,7 +98,8 @@ public class TvSeasonDetailTest {
         String email = "tvfallback-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        var mediaItem = testDataHelper.createMediaItem(externalId, MediaType.TV_SERIES, "Fallback Show " + externalId);
+        var mediaItem =
+                testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Fallback Show " + externalId);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 1);
 
         // TMDB is unavailable for random externalId (test-key invalid -> fallback)
@@ -119,7 +120,7 @@ public class TvSeasonDetailTest {
         String email = "movienoseason-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE, "Movie Plain " + externalId);
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE, "Movie Plain " + externalId);
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
@@ -135,7 +136,7 @@ public class TvSeasonDetailTest {
         String email = "order-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        var mediaItem = testDataHelper.createMediaItem(externalId, MediaType.TV_SERIES, "Order Show " + externalId);
+        var mediaItem = testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Order Show " + externalId);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 2, "Season 2", 1);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 1);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);

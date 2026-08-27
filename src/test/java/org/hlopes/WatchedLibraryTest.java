@@ -5,8 +5,8 @@ import static org.hamcrest.Matchers.*;
 
 import java.util.UUID;
 
-import org.hlopes.entity.MediaType;
-import org.hlopes.repository.UserRepository;
+import org.hlopes.auth.repository.UserRepository;
+import org.hlopes.catalog.entity.MediaTypeEnum;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -84,7 +84,7 @@ public class WatchedLibraryTest {
         String email = "watched-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE, "Watched Movie " + externalId);
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE, "Watched Movie " + externalId);
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
@@ -138,16 +138,16 @@ public class WatchedLibraryTest {
         String email = "watched-val-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE);
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE);
 
         Long ext2 = nextExternalId();
-        testDataHelper.createMediaItem(ext2, MediaType.MOVIE);
+        testDataHelper.createMediaItem(ext2, MediaTypeEnum.MOVIE);
         Long ext3 = nextExternalId();
-        testDataHelper.createMediaItem(ext3, MediaType.TV_SERIES);
+        testDataHelper.createMediaItem(ext3, MediaTypeEnum.TV_SERIES);
         Long ext4 = nextExternalId();
-        testDataHelper.createMediaItem(ext4, MediaType.MOVIE);
+        testDataHelper.createMediaItem(ext4, MediaTypeEnum.MOVIE);
         Long ext5 = nextExternalId();
-        testDataHelper.createMediaItem(ext5, MediaType.MOVIE);
+        testDataHelper.createMediaItem(ext5, MediaTypeEnum.MOVIE);
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
@@ -206,7 +206,7 @@ public class WatchedLibraryTest {
         String email = "patch-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE);
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE);
 
         String entryId = given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
@@ -258,7 +258,7 @@ public class WatchedLibraryTest {
         String email = "trans-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE, "Transition Movie");
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE, "Transition Movie");
 
         String entryId = given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
@@ -328,7 +328,7 @@ public class WatchedLibraryTest {
         String email = "remove-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
-        testDataHelper.createMediaItem(externalId, MediaType.MOVIE);
+        testDataHelper.createMediaItem(externalId, MediaTypeEnum.MOVIE);
 
         String entryId = given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
@@ -368,7 +368,7 @@ public class WatchedLibraryTest {
                 .statusCode(404);
 
         Long externalId2 = nextExternalId();
-        testDataHelper.createMediaItem(externalId2, MediaType.MOVIE);
+        testDataHelper.createMediaItem(externalId2, MediaTypeEnum.MOVIE);
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
                 .body("{\"externalId\":" + externalId2
@@ -401,7 +401,7 @@ public class WatchedLibraryTest {
 
         for (int i = 0; i < 3; i++) {
             Long ext = nextExternalId();
-            testDataHelper.createMediaItem(ext, MediaType.MOVIE, "Iso Movie " + i + " " + ext);
+            testDataHelper.createMediaItem(ext, MediaTypeEnum.MOVIE, "Iso Movie " + i + " " + ext);
             given().header("Authorization", "Bearer " + jwt)
                     .contentType(ContentType.JSON)
                     .body("{\"externalId\":" + ext + ",\"mediaType\":\"movie\",\"status\":\"COMPLETED\",\"rating\":"
@@ -436,12 +436,12 @@ public class WatchedLibraryTest {
         String jwt = registerAndGetJwt(email, "password123");
 
         Long extWishlist = nextExternalId();
-        testDataHelper.createMediaItem(extWishlist, MediaType.MOVIE, "Detail Wishlist Movie");
+        testDataHelper.createMediaItem(extWishlist, MediaTypeEnum.MOVIE, "Detail Wishlist Movie");
         Long extWatched = nextExternalId();
-        testDataHelper.createMediaItem(extWatched, MediaType.TV_SERIES, "Detail Watched Show");
+        testDataHelper.createMediaItem(extWatched, MediaTypeEnum.TV_SERIES, "Detail Watched Show");
 
         Long extNone = nextExternalId();
-        testDataHelper.createMediaItem(extNone, MediaType.MOVIE, "Detail None Movie");
+        testDataHelper.createMediaItem(extNone, MediaTypeEnum.MOVIE, "Detail None Movie");
 
         String wishlistId = given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)

@@ -2,13 +2,13 @@ package org.hlopes;
 
 import java.time.LocalDate;
 
-import org.hlopes.entity.MediaItem;
-import org.hlopes.entity.MediaType;
-import org.hlopes.entity.TvEpisode;
-import org.hlopes.entity.TvSeason;
-import org.hlopes.repository.MediaItemRepository;
-import org.hlopes.repository.TvEpisodeRepository;
-import org.hlopes.repository.TvSeasonRepository;
+import org.hlopes.catalog.entity.MediaItem;
+import org.hlopes.catalog.entity.MediaTypeEnum;
+import org.hlopes.catalog.entity.TvEpisode;
+import org.hlopes.catalog.entity.TvSeason;
+import org.hlopes.catalog.repository.MediaItemRepository;
+import org.hlopes.catalog.repository.TvEpisodeRepository;
+import org.hlopes.catalog.repository.TvSeasonRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -27,7 +27,7 @@ public class TestDataHelper {
     TvEpisodeRepository tvEpisodeRepository;
 
     @Transactional
-    public MediaItem createMediaItem(Long externalId, MediaType mediaType, String title) {
+    public MediaItem createMediaItem(Long externalId, MediaTypeEnum mediaType, String title) {
         MediaItem item = new MediaItem();
         item.externalId = externalId;
         item.mediaType = mediaType;
@@ -41,7 +41,7 @@ public class TestDataHelper {
     }
 
     @Transactional
-    public MediaItem createMediaItem(Long externalId, MediaType mediaType) {
+    public MediaItem createMediaItem(Long externalId, MediaTypeEnum mediaType) {
         return createMediaItem(externalId, mediaType, "Test " + mediaType + " " + externalId);
     }
 
