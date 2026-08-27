@@ -42,13 +42,14 @@
             <a href="/" class="flex items-center gap-2">
                 <span class="inline-flex h-7 w-7 items-center justify-center border border-zinc-900 bg-zinc-900 text-white text-xs font-semibold">M</span>
                 <span class="text-sm font-semibold tracking-tight">MediaShelf</span>
-                <span class="ml-2 text-xs font-mono text-zinc-500 border border-zinc-200 px-1.5 py-0.5 rounded-sm">0.2.0</span>
+                <span class="ml-2 text-xs font-mono text-zinc-500 border border-zinc-200 px-1.5 py-0.5 rounded-sm">0.3.0</span>
             </a>
-            <nav class="flex items-center gap-1 text-sm">
+            <nav class="hidden sm:flex items-center gap-1 text-sm">
                 {#if currentUser}
-                    <a href="/wishlist" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Wishlist</a>
                     <span class="text-zinc-700 font-mono text-xs px-3 py-1.5 border border-zinc-200 bg-zinc-50 rounded-sm">{currentUser}</span>
-                    <form method="post" action="/api/logout" class="inline">
+                    <a href="/wishlist" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Wishlist</a>
+                    <a href="/watched" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Watched</a>
+                    <form method="post" action="/api/auth/logout" class="inline">
                         <button type="submit" class="px-3 py-1.5 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Logout</button>
                     </form>
                 {#else}
@@ -56,6 +57,26 @@
                     <a href="/register" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 font-medium border border-zinc-900">Register</a>
                 {/if}
             </nav>
+            <button id="burger-btn" class="sm:hidden inline-flex items-center justify-center p-2 border border-zinc-200 rounded-sm bg-white hover:bg-zinc-50" aria-label="Open menu" aria-expanded="false">
+                <svg class="h-5 w-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden sm:hidden border-t border-zinc-200 bg-white">
+            <div class="mx-auto max-w-5xl px-6 py-3 flex flex-col gap-2 text-sm">
+                {#if currentUser}
+                    <a href="/wishlist" class="px-3 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Wishlist</a>
+                    <a href="/watched" class="px-3 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Watched</a>
+                    <span class="text-zinc-700 font-mono text-xs px-3 py-2 border border-zinc-200 bg-zinc-50 rounded-sm">{currentUser}</span>
+                    <form method="post" action="/logout">
+                        <button type="submit" class="w-full text-left px-3 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm text-sm font-medium">Logout</button>
+                    </form>
+                {#else}
+                    <a href="/login" class="px-3 py-2 text-zinc-700 hover:text-zinc-900 font-medium border border-zinc-200 rounded-sm bg-white text-center">Login</a>
+                    <a href="/register" class="px-3 py-2 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 font-medium border border-zinc-900 text-center">Register</a>
+                {/if}
+            </div>
         </div>
     </header>
 
@@ -66,5 +87,13 @@
     <footer class="mx-auto max-w-5xl px-6 py-6 border-t border-zinc-200 mt-8">
         <p class="text-xs font-mono text-zinc-500">MediaShelf · movies · tv shows · games — <a href="/q/swagger-ui" class="underline hover:text-zinc-700">API</a> · <a href="/q/openapi" class="underline hover:text-zinc-700">OpenAPI</a></p>
     </footer>
+    <script>
+        document.getElementById('burger-btn')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', String(!expanded));
+            menu.classList.toggle('hidden');
+        });
+    </script>
 </body>
 </html>

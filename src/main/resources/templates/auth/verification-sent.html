@@ -20,7 +20,7 @@
             {/if}
         </div>
 
-        <form method="post" action="/api/resend-verification" class="mt-6 flex gap-2">
+        <form method="post" action="/api/auth/resend-verification" class="mt-6 flex gap-2">
             <input type="hidden" name="email" value="{email ?: ''}">
             <input type="email" name="email_display" value="{email ?: ''}" disabled placeholder="you@example.com"
                    class="flex-1 border border-zinc-300 rounded-sm px-3 py-2 text-sm bg-zinc-100 text-zinc-500">

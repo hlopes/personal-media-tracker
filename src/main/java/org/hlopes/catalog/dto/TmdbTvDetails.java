@@ -13,4 +13,5 @@ public record TmdbTvDetails(
         @JsonProperty("poster_path") String posterPath,
         @JsonProperty("backdrop_path") String backdropPath,
         @JsonProperty("first_air_date") String firstAirDate,
-        @JsonProperty("created_by") List<TmdbCreatedBy> createdBy) {}
+        @JsonProperty("created_by") List<TmdbCreatedBy> createdBy,
+        List<TmdbSeasonSummary> seasons) {}
