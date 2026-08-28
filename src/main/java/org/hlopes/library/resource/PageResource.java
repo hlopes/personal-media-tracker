@@ -205,11 +205,12 @@ public class PageResource {
                         epDto.airDate(),
                         epDto.runtime()));
             }
+
             var watch = watchMap.get(sw.season().id());
-            boolean watched = watch != null;
-            Integer rating = watched ? watch.rating : null;
-            var watchedAt = watched ? watch.watchedAt : null;
-            result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watched, rating, watchedAt));
+            Integer rating = watch != null ? watch.rating : null;
+            var watchedAt = watch != null ? watch.watchedAt : null;
+
+            result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watch != null, rating, watchedAt));
         }
         return result;
     }

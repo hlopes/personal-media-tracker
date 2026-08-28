@@ -72,6 +72,7 @@ public class SeasonWatchService {
                     rating,
                     watchedAt));
         }
+
         result.sort((a, b) -> {
             int sa = a.seasonNumber();
             int sb = b.seasonNumber();
@@ -112,7 +113,9 @@ public class SeasonWatchService {
                     ep.airDate,
                     ep.runtime));
         }
+
         result.sort((a, b) -> Integer.compare(a.episodeNumber(), b.episodeNumber()));
+
         return result;
     }
 
@@ -188,6 +191,7 @@ public class SeasonWatchService {
             watch.watchedAt = Instant.now();
             seasonWatchRepository.persist(watch);
         }
+
         deriveStatusAndPersist(entry);
 
         return new SeasonWatchResponse(watch.id, season.id, watch.rating, watch.watchedAt);

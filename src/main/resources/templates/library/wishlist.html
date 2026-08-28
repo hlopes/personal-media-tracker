@@ -22,7 +22,7 @@
             <div class="min-w-0 flex-1">
                 <div class="text-sm font-medium truncate flex justify-between items-start">
                     <a href="/?type={#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}&id={entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a>
-                    <button data-entry-id="{entry.id}" class="remove-btn mt-2 text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
+                    <button data-entry-id="{entry.id}" class="remove-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
                 </div>
                 <div class="text-xs font-mono text-zinc-500">{entry.mediaItem.mediaType}{#if entry.mediaItem.releaseDate} · {entry.mediaItem.releaseDate}{/if}</div>
             </div>

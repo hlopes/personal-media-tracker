@@ -345,6 +345,7 @@ public class LibraryService {
             }
         } catch (Exception ignored) {
         }
+
         libraryEntryRepository.delete(entry);
     }
 

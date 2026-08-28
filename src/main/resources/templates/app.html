@@ -4,7 +4,7 @@
 <div class="max-w-3xl mx-auto space-y-6">
     <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
         <h1 class="text-lg font-semibold tracking-tight">Welcome, <span class="font-mono text-sm border border-zinc-200 px-1.5 py-0.5 rounded-sm">{email}</span></h1>
-        <p class="mt-2 text-sm text-zinc-600">Authenticated via HttpOnly <span class="font-mono text-xs">jwt</span> cookie (1h). Search to view details inline.</p>
+        <p class="mt-2 text-sm text-zinc-600">Authenticated via HttpOnly <span class="font-mono text-xs">jwt</span> cookie (1h).</p>
         <div class="mt-4 flex gap-2 text-sm">
             <a href="/api/me" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">GET /api/me (JSON)</a>
             <a href="/q/swagger-ui" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">Swagger</a>
@@ -137,9 +137,9 @@
             html += '<p class="text-xs font-mono text-zinc-600 mb-1">Update rating:</p><div class="flex gap-1">';
             for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 ' + (currentRating==i?'bg-amber-100 border-amber-300':'border-zinc-200') + '">' + i + '\u2605</button>';
             html += '</div></div>';
-            html += '<button id="remove-watched-btn" data-entry-id="' + (currentEntryId||'') + '" class="text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-3 py-1.5">Remove from Watched</button>';
+            html += '<button id="remove-watched-btn" data-entry-id="' + (currentEntryId||'') + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Remove from Watched</button>';
         } else if (alreadyInWishlist) {
-            html += '<span class="inline-flex px-3 py-1.5 bg-zinc-900 text-white rounded-sm text-sm border border-zinc-900">Already in Wishlist</span>';
+            html += '<button id="remove-wishlist-btn" data-entry-id="' + (currentEntryId||'') + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Remove from Wishlist</button>';
             html += '<div id="watched-actions" data-entry-id="' + (currentEntryId||'') + '" data-status="' + (currentStatus||'') + '" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '">';
             html += '<p class="text-xs font-mono text-zinc-600 mb-1">Mark as Watched:</p><div class="flex gap-1">';
             for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">' + i + '\u2605</button>';
@@ -256,6 +256,7 @@
             }
           });
         });
+
         document.getElementById('remove-watched-btn')?.addEventListener('click', () => {
           const btn = document.getElementById('remove-watched-btn');
           if (!confirm('Remove from Watched?')) return;
@@ -267,6 +268,24 @@
             .then(r => { if (r.status === 204) { if (externalId && mediaType) loadDetail(mediaType, externalId); else detailContainer.innerHTML=''; } else return r.json().then(j=> alert(j.error||'Failed')); })
             .catch(()=> alert('Failed'));
         });
+
+        document.getElementById('remove-wishlist-btn')?.addEventListener('click', () => {
+          const btn = document.getElementById('remove-wishlist-btn');
+          
+          if (!confirm('Remove from Wishlist?')) {
+            return;
+          }
+
+          const id = btn.getAttribute('data-entry-id');
+          const container = document.getElementById('watched-actions');
+          const externalId = container ? container.getAttribute('data-external-id') : null;
+          const mediaType = container ? container.getAttribute('data-media-type') : null;
+          
+          fetch('/api/me/library/' + id, { method: 'DELETE', credentials: 'include' })
+            .then(r => { if (r.status === 204) { if (externalId && mediaType) loadDetail(mediaType, externalId); else detailContainer.innerHTML=''; } else return r.json().then(j=> alert(j.error||'Failed')); })
+            .catch(()=> alert('Failed'));
+        });
+
         function getEntryId() {
           const c = document.getElementById('seasons-container');
           if (c) {
@@ -390,6 +409,7 @@
             loadDetail(type, id);
         }
     })();
+
     window.addEventListener('popstate', () => {
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type');
