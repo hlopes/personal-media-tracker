@@ -27,12 +27,12 @@ public class AppFlowTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
         String token = userRepository.findByEmail(email).orElseThrow().verificationToken;
-        given().when().get("/api/auth/verify?token=" + token).then().statusCode(200);
+        given().when().get("/api/helpers/auth/verify?token=" + token).then().statusCode(200);
 
         var loginResp = given().redirects()
                 .follow(false)
@@ -40,10 +40,11 @@ public class AppFlowTest {
                 .formParam("email", email)
                 .formParam("password", password)
                 .when()
-                .post("/api/login")
+                .post("/api/auth/login")
                 .then()
                 .statusCode(303)
-                .header("Location", containsString("/app"))
+                .header("Location", containsString("/"))
+                .header("Location", not(containsString("/app")))
                 .cookie("jwt", notNullValue())
                 .extract()
                 .response();
@@ -54,7 +55,7 @@ public class AppFlowTest {
         String jwt = given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/login")
+                .post("/api/helpers/auth/login")
                 .then()
                 .statusCode(200)
                 .extract()
@@ -84,6 +85,27 @@ public class AppFlowTest {
                 .log()
                 .all()
                 .statusCode(200);
+
+        System.out.println("Testing / with Bearer header");
+        given().header("Authorization", "Bearer " + jwt)
+                .when()
+                .get("/")
+                .then()
+                .log()
+                .all()
+                .statusCode(200)
+                .body(containsString("Welcome"));
+
+        System.out.println("Testing / with cookie");
+        given().cookie("jwt", jwtCookie)
+                .when()
+                .get("/")
+                .then()
+                .log()
+                .all()
+                .statusCode(200)
+                .body(containsString("Welcome"))
+                .body(containsString(email.toLowerCase()));
 
         System.out.println("Testing /app with Bearer header");
         given().header("Authorization", "Bearer " + jwt)

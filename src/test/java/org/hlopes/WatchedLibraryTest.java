@@ -31,17 +31,17 @@ public class WatchedLibraryTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
         String token = userRepository.findByEmail(email.toLowerCase()).orElseThrow().verificationToken;
-        given().when().get("/api/auth/verify?token=" + token).then().statusCode(200);
+        given().when().get("/api/helpers/auth/verify?token=" + token).then().statusCode(200);
 
         return given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/login")
+                .post("/api/helpers/auth/login")
                 .then()
                 .statusCode(200)
                 .extract()
@@ -71,13 +71,7 @@ public class WatchedLibraryTest {
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/login"));
-        given().redirects()
-                .follow(false)
-                .when()
-                .get("/media/movie/603")
-                .then()
-                .statusCode(303)
-                .header("Location", containsString("/login"));
+        given().when().get("/api/media/movie/603").then().statusCode(401);
     }
 
     @Test
@@ -124,7 +118,8 @@ public class WatchedLibraryTest {
                 .body(containsString("Watched"))
                 .body(containsString("★★★★★"))
                 .body(containsString("(5/5)"))
-                .body(containsString("/media/movie/" + externalId));
+                .body(containsString("?type=movie"))
+                .body(containsString(String.valueOf(externalId)));
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
@@ -462,29 +457,30 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/movie/" + extWishlist)
+                .get("/api/media/movie/" + extWishlist)
                 .then()
                 .statusCode(200)
-                .body(containsString("Already in Wishlist"))
-                .body(containsString("Mark as Watched"));
+                .body("alreadyInWishlist", is(true))
+                .body("alreadyInWatched", is(false))
+                .body("currentStatus", is("WISHLIST"));
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/tv/" + extWatched)
+                .get("/api/media/tv/" + extWatched)
                 .then()
                 .statusCode(200)
-                .body(containsString("Watched"))
-                .body(containsString("★★★★☆"))
-                .body(containsString("Update rating"))
-                .body(containsString("Remove from Watched"));
+                .body("alreadyInWatched", is(true))
+                .body("alreadyInWishlist", is(false))
+                .body("currentStatus", is("COMPLETED"))
+                .body("currentRating", is(4));
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/movie/" + extNone)
+                .get("/api/media/movie/" + extNone)
                 .then()
                 .statusCode(200)
-                .body(containsString("Add to Wishlist"))
-                .body(containsString("Or mark as Watched"));
+                .body("alreadyInWishlist", is(false))
+                .body("alreadyInWatched", is(false));
     }
 
     @Test
@@ -501,6 +497,12 @@ public class WatchedLibraryTest {
                 .body(containsString("href=\"/watched\""))
                 .body(containsString(">Watched<"));
 
-        given().when().get("/").then().statusCode(200).body(not(containsString("href=\"/watched\"")));
+        given().redirects()
+                .follow(false)
+                .when()
+                .get("/")
+                .then()
+                .statusCode(303)
+                .header("Location", containsString("/login"));
     }
 }

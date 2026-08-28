@@ -8,7 +8,7 @@
     </div>
     {#if entries.isEmpty}
     <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center">
-        <p class="text-sm text-zinc-600">Your Wishlist is empty — search above in <a href="/app" class="underline">/app</a>.</p>
+        <p class="text-sm text-zinc-600">Your Wishlist is empty — search above in <a href="/" class="underline">/</a>.</p>
     </div>
     {#else}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -20,10 +20,11 @@
             <div class="h-20 w-14 bg-zinc-100 border border-zinc-200 rounded-sm flex-shrink-0"></div>
             {/if}
             <div class="min-w-0 flex-1">
-                <div class="text-sm font-medium truncate"><a href="/media/{#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}/{entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a></div>
+                <div class="text-sm font-medium truncate flex justify-between items-start">
+                    <a href="/?type={#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}&id={entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a>
+                    <button data-entry-id="{entry.id}" class="remove-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
+                </div>
                 <div class="text-xs font-mono text-zinc-500">{entry.mediaItem.mediaType}{#if entry.mediaItem.releaseDate} · {entry.mediaItem.releaseDate}{/if}</div>
-                <div class="text-xs font-mono text-zinc-400 mt-1">added {entry.createdAt}</div>
-                <button data-entry-id="{entry.id}" class="remove-btn mt-2 text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
             </div>
         </div>
         {/for}

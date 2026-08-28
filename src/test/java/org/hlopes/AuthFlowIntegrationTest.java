@@ -28,7 +28,7 @@ public class AuthFlowIntegrationTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
@@ -36,7 +36,7 @@ public class AuthFlowIntegrationTest {
         String token = userRepository.findByEmail(email).orElseThrow().verificationToken;
         // Verify
         given().when()
-                .get("/api/auth/verify?token=" + token)
+                .get("/api/helpers/auth/verify?token=" + token)
                 .then()
                 .statusCode(200)
                 .body("verified", is(true));
@@ -45,7 +45,7 @@ public class AuthFlowIntegrationTest {
         String jwt = given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/login")
+                .post("/api/helpers/auth/login")
                 .then()
                 .statusCode(200)
                 .body("accessToken", notNullValue())
@@ -67,7 +67,7 @@ public class AuthFlowIntegrationTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(409);
     }
@@ -80,7 +80,7 @@ public class AuthFlowIntegrationTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + emailUpper + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(201);
 
@@ -88,7 +88,7 @@ public class AuthFlowIntegrationTest {
         given().contentType(ContentType.JSON)
                 .body("{\"email\":\"" + emailUpper.toLowerCase() + "\",\"password\":\"" + password + "\"}")
                 .when()
-                .post("/api/auth/register")
+                .post("/api/helpers/auth/register")
                 .then()
                 .statusCode(409);
     }
