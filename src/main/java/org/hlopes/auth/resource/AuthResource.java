@@ -122,7 +122,7 @@ public class AuthResource {
                     .build();
             Log.infof("Login cookie set for %s", email);
 
-            return Response.seeOther(URI.create("/app")).cookie(cookie).build();
+            return Response.seeOther(URI.create("/")).cookie(cookie).build();
         } catch (WebApplicationException e) {
             String msg = ErrorUtil.extractError(e);
             int status = e.getResponse().getStatus();

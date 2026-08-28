@@ -8,7 +8,7 @@
     </div>
     {#if entries.isEmpty}
     <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center">
-        <p class="text-sm text-zinc-600">Your Watched list is empty — mark items as watched with a rating from <a href="/app" class="underline">/app</a> or detail pages.</p>
+        <p class="text-sm text-zinc-600">Your Watched list is empty — mark items as watched with a rating from <a href="/" class="underline">/</a> or detail pages.</p>
     </div>
     {#else}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -21,7 +21,7 @@
             {/if}
             <div class="min-w-0 flex-1">
                 <div class="text-sm font-medium truncate flex items-start justify-between">
-                    <a href="/media/{#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}/{entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a>
+                    <a href="/?type={#if entry.mediaItem.mediaType == 'TV_SERIES'}tv{#else}movie{/if}&id={entry.mediaItem.externalId}" class="hover:underline">{entry.mediaItem.title}</a>
                     <button data-entry-id="{entry.id}" class="remove-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1">Remove</button>
                 </div>
                 <div class="text-xs font-mono text-zinc-500">{entry.mediaItem.mediaType}{#if entry.mediaItem.releaseDate} · {entry.mediaItem.releaseDate}{/if}</div>

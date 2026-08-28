@@ -22,24 +22,26 @@ public class PageResource {
     JsonWebToken jwt;
 
     @Inject
-    Template index;
-
-    @Inject
     Template app;
 
     @GET
     @PermitAll
-    public TemplateInstance getIndex() {
-        String email = null;
-
+    public Response getIndex() {
         try {
-            if (jwt != null && jwt.getSubject() != null) {
-                email = jwt.getSubject();
-            }
-        } catch (Exception ignored) {
-        }
+            String email = jwt != null ? jwt.getSubject() : null;
 
-        return index.data("currentUser", email);
+            if (email == null || email.isBlank()) {
+                throw new NotAuthorizedException("Not logged in");
+            }
+
+            TemplateInstance instance = app.data("email", email).data("currentUser", email);
+
+            return Response.ok(instance).build();
+        } catch (Exception e) {
+            String msg = URLEncoder.encode("Please login to access your library", StandardCharsets.UTF_8);
+
+            return Response.seeOther(URI.create("/login?error=" + msg)).build();
+        }
     }
 
     @GET
@@ -57,7 +59,6 @@ public class PageResource {
 
             return Response.ok(instance).build();
         } catch (Exception e) {
-            // For browser HTML, redirect to login instead of raw 401
             String msg = URLEncoder.encode("Please login to access your library", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/login?error=" + msg)).build();

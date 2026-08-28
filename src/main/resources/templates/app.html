@@ -1,10 +1,10 @@
 {#include base.html}
 {#title}Library{/title}
 {#body}
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6">
     <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8">
         <h1 class="text-lg font-semibold tracking-tight">Welcome, <span class="font-mono text-sm border border-zinc-200 px-1.5 py-0.5 rounded-sm">{email}</span></h1>
-        <p class="mt-2 text-sm text-zinc-600">Authenticated via HttpOnly <span class="font-mono text-xs">jwt</span> cookie (1h). This is the placeholder library page for 0.2.0 — media tables/cards arrive in 0.3.0.</p>
+        <p class="mt-2 text-sm text-zinc-600">Authenticated via HttpOnly <span class="font-mono text-xs">jwt</span> cookie (1h). Search to view details inline.</p>
         <div class="mt-4 flex gap-2 text-sm">
             <a href="/api/me" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">GET /api/me (JSON)</a>
             <a href="/q/swagger-ui" class="px-3 py-1.5 border border-zinc-200 bg-white rounded-sm hover:bg-zinc-50">Swagger</a>
@@ -22,37 +22,43 @@
         <p id="catalog-hint" class="mt-2 text-xs font-mono text-zinc-500"></p>
     </div>
 
-    <div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-0 overflow-hidden">
-        <div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
-            <h2 class="text-sm font-semibold">Library</h2>
-            <span class="text-xs font-mono text-zinc-500 border border-zinc-200 px-2 py-1 rounded-sm">empty — 0.3.0</span>
-        </div>
-        <div class="p-6">
-            <div class="border border-dashed border-zinc-300 rounded-sm p-8 text-center">
-                <p class="text-sm text-zinc-600">No media items yet. Tables and card lists will appear here.</p>
-                <p class="mt-1 text-xs font-mono text-zinc-500">Sharp: border, rounded-sm, shadow-sm, zinc-50/900 only</p>
-            </div>
-        </div>
+    <div id="media-detail-empty" class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center">
+        <p class="text-sm text-zinc-600">Search and select a movie or TV show to see details here.</p>
+        <p class="mt-1 text-xs font-mono text-zinc-500">Details appear here.</p>
     </div>
+    <div id="media-detail" class="hidden space-y-6"></div>
 </div>
 <script>
 (function() {
     const input = document.getElementById('catalog-search');
     const dropdown = document.getElementById('catalog-dropdown');
     const hint = document.getElementById('catalog-hint');
+    const detailContainer = document.getElementById('media-detail');
+    const emptyPlaceholder = document.getElementById('media-detail-empty');
     let debounce = null;
     let selected = -1;
     let results = [];
 
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function starsHtml(rating) {
+        if (rating === 5) return '★★★★★';
+        if (rating === 4) return '★★★★☆';
+        if (rating === 3) return '★★★☆☆';
+        if (rating === 2) return '★★☆☆☆';
+        if (rating === 1) return '★☆☆☆☆';
+        return '';
+    }
     function hide() {
         dropdown.classList.add('hidden');
         dropdown.innerHTML = '';
         selected = -1;
     }
-
-    function render() {
+    function renderDropdown() {
         if (!results.length) {
-            dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-500">No results for “' + input.value.trim() + '”</div>';
+            dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-zinc-500">No results for "' + escapeHtml(input.value.trim()) + '"</div>';
             dropdown.classList.remove('hidden');
             return;
         }
@@ -60,15 +66,22 @@
             const year = r.releaseDate ? r.releaseDate.substring(0,4) : '';
             const poster = r.posterPath ? 'https://image.tmdb.org/t/p/w185' + r.posterPath : '';
             const active = i === selected ? ' bg-zinc-50' : '';
-            return '<a href="/media/' + r.mediaType.toLowerCase() + '/' + r.externalId + '" class="flex gap-3 px-3 py-2 border-b border-zinc-100 last:border-0 hover:bg-zinc-50' + active + '">'
+            return '<button data-type="' + escapeHtml(r.mediaType) + '" data-id="' + r.externalId + '" class="detail-select w-full text-left flex gap-3 px-3 py-2 border-b border-zinc-100 last:border-0 hover:bg-zinc-50' + active + '">'
                 + (poster ? '<img src="' + poster + '" alt="" class="h-12 w-8 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />' : '<div class="h-12 w-8 bg-zinc-100 border border-zinc-200 rounded-sm flex-shrink-0"></div>')
-                + '<div class="min-w-0"><div class="text-sm font-medium truncate">' + r.title + '</div><div class="text-xs font-mono text-zinc-500">' + r.mediaType + (year ? ' · ' + year : '') + '</div></div></a>';
+                + '<div class="min-w-0"><div class="text-sm font-medium truncate">' + escapeHtml(r.title) + '</div><div class="text-xs font-mono text-zinc-500">' + escapeHtml(r.mediaType) + (year ? ' \xB7 ' + year : '') + '</div></div></button>';
         }).join('');
         dropdown.classList.remove('hidden');
+        dropdown.querySelectorAll('.detail-select').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const t = btn.getAttribute('data-type');
+                const id = btn.getAttribute('data-id');
+                hide();
+                loadDetail(t, id);
+            });
+        });
     }
-
     function fetchSearch(q) {
-        hint.textContent = 'Searching…';
+        hint.textContent = 'Searching...';
         fetch('/api/catalog/search?q=' + encodeURIComponent(q), { credentials: 'include' })
             .then(res => {
                 if (res.status === 400) { hint.textContent = 'Type at least 2 characters'; hide(); return null; }
@@ -80,10 +93,276 @@
                 if (!data) return;
                 results = data.results || [];
                 hint.textContent = '';
-                render();
+                renderDropdown();
             })
             .catch(() => { hint.textContent = 'Catalog unavailable'; hide(); });
     }
+
+    function renderDetail(data) {
+        const m = data.mediaItem;
+        const cast = data.cast || [];
+        const director = data.director;
+        const posterUrl = data.posterUrl;
+        const backdropUrl = data.backdropUrl;
+        const imageBase = data.imageBase;
+        const alreadyInWatched = data.alreadyInWatched;
+        const alreadyInWishlist = data.alreadyInWishlist;
+        const currentRating = data.currentRating;
+        const currentEntryId = data.currentEntryId;
+        const currentStatus = data.currentStatus;
+        const seasons = data.seasons || [];
+
+        let html = '';
+        if (backdropUrl) {
+            html += '<div class="h-48 w-full bg-cover bg-top border border-zinc-200 rounded-sm" style="background-image:url(' + escapeHtml(backdropUrl) + ')"></div>';
+        }
+        html += '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm overflow-hidden">';
+        html += '<div class="flex gap-6 p-6">';
+        if (posterUrl) {
+            html += '<img src="' + escapeHtml(posterUrl) + '" alt="Poster for ' + escapeHtml(m.title) + '" class="hidden sm:block h-48 w-32 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />';
+        }
+        html += '<div class="min-w-0 flex-1">';
+        html += '<div class="flex items-center gap-2"><span class="text-xs font-mono border border-zinc-200 px-1.5 py-0.5 rounded-sm">' + escapeHtml(m.mediaType) + '</span>';
+        if (m.releaseDate) html += '<span class="text-xs font-mono text-zinc-500">' + escapeHtml(m.releaseDate) + '</span>';
+        html += '</div>';
+        html += '<h1 class="mt-2 text-xl font-semibold tracking-tight">' + escapeHtml(m.title) + '</h1>';
+        if (director) html += '<p class="mt-1 text-sm text-zinc-600">Director: <span class="font-medium">' + escapeHtml(director.name) + '</span></p>';
+        if (m.synopsis) html += '<p class="mt-3 text-sm text-zinc-700 leading-relaxed">' + escapeHtml(m.synopsis) + '</p>';
+        html += '<div class="mt-4 space-y-3">';
+        if (alreadyInWatched) {
+            html += '<div class="flex items-center gap-2"><span class="inline-flex px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-sm text-sm">Watched</span>';
+            if (currentRating) html += '<span class="text-sm text-amber-600">' + starsHtml(currentRating) + ' <span class="font-mono text-zinc-600">(' + currentRating + '/5)</span></span>';
+            html += '</div>';
+            html += '<div id="watched-actions" data-entry-id="' + (currentEntryId||'') + '" data-status="' + (currentStatus||'') + '" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '">';
+            html += '<p class="text-xs font-mono text-zinc-600 mb-1">Update rating:</p><div class="flex gap-1">';
+            for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 ' + (currentRating==i?'bg-amber-100 border-amber-300':'border-zinc-200') + '">' + i + '\u2605</button>';
+            html += '</div></div>';
+            html += '<button id="remove-watched-btn" data-entry-id="' + (currentEntryId||'') + '" class="text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-3 py-1.5">Remove from Watched</button>';
+        } else if (alreadyInWishlist) {
+            html += '<span class="inline-flex px-3 py-1.5 bg-zinc-900 text-white rounded-sm text-sm border border-zinc-900">Already in Wishlist</span>';
+            html += '<div id="watched-actions" data-entry-id="' + (currentEntryId||'') + '" data-status="' + (currentStatus||'') + '" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '">';
+            html += '<p class="text-xs font-mono text-zinc-600 mb-1">Mark as Watched:</p><div class="flex gap-1">';
+            for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">' + i + '\u2605</button>';
+            html += '</div></div>';
+        } else {
+            html += '<div class="inline"><button id="add-wishlist-btn" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Add to Wishlist</button></div>';
+            html += '<div id="watched-actions" data-entry-id="" data-status="" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '" class="mt-3">';
+            html += '<p class="text-xs font-mono text-zinc-600 mb-1">Or mark as Watched:</p><div class="flex gap-1">';
+            for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">' + i + '\u2605</button>';
+            html += '</div></div>';
+        }
+        html += '</div></div></div>';
+        if (cast && cast.length) {
+            html += '<div class="px-6 py-4 border-t border-zinc-200"><h2 class="text-sm font-semibold">Cast</h2><div class="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-3">';
+            cast.forEach(member => {
+                html += '<div class="border border-zinc-200 rounded-sm p-2 pb-6 flex flex-col">';
+                if (member.profilePath) html += '<img src="https://image.tmdb.org/t/p/w185' + escapeHtml(member.profilePath) + '" alt="' + escapeHtml(member.name) + '" class="w-full h-auto object-contain object-top rounded-sm block" />';
+                html += '<div class="mt-2"><div class="text-xs font-medium truncate">' + escapeHtml(member.name) + '</div><div class="text-xs font-mono text-zinc-500 truncate">' + escapeHtml(member.character||'') + '</div></div></div>';
+            });
+            html += '</div></div>';
+        }
+        html += '</div>';
+
+        if (m.mediaType === 'TV_SERIES') {
+            html += '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm overflow-hidden" id="seasons-container" data-entry-id="' + (currentEntryId||'') + '" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '">';
+            html += '<div class="p-4 border-b border-zinc-200"><h2 class="text-sm font-semibold">Seasons</h2></div>';
+            if (!seasons.length) {
+                html += '<div class="p-4 text-sm text-zinc-500">No seasons available yet.</div>';
+            } else {
+                html += '<div class="divide-y divide-zinc-200">';
+                seasons.forEach(sw => {
+                    const season = sw.season;
+                    const episodes = sw.episodes || [];
+                    const watched = sw.watched;
+                    const rating = sw.rating;
+                    html += '<details class="group" data-season-number="' + season.seasonNumber + '"><summary class="flex gap-4 p-4 cursor-pointer hover:bg-zinc-50 list-none">';
+                    if (season.posterPath) html += '<img src="' + escapeHtml(imageBase) + '/w185' + escapeHtml(season.posterPath) + '" alt="Poster for ' + escapeHtml(season.name) + '" class="h-24 w-16 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />';
+                    html += '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">';
+                    html += '<span class="text-sm font-medium">' + escapeHtml(season.name) + '</span>';
+                    html += '<span class="text-xs font-mono text-zinc-500">Season ' + season.seasonNumber + ' \xB7 ' + (season.episodeCount||0) + ' episodes</span>';
+                    if (watched) {
+                        html += '<span class="text-xs font-mono bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-sm">Watched \u2713</span>';
+                        if (rating) html += '<span class="text-xs text-amber-600">' + starsHtml(rating) + ' <span class="font-mono text-zinc-600">(' + rating + '/5)</span></span>';
+                    } else {
+                        html += '<span class="text-xs font-mono border border-zinc-200 px-1.5 py-0.5 rounded-sm text-zinc-500">Not watched</span>';
+                    }
+                    if (season.airDate) html += '<span class="text-xs font-mono text-zinc-400">' + escapeHtml(season.airDate) + '</span>';
+                    html += '</div>';
+                    if (season.overview) html += '<p class="mt-1 text-xs text-zinc-600 line-clamp-2">' + escapeHtml(season.overview) + '</p>';
+                    html += '<div class="mt-2 flex items-center gap-2 flex-wrap season-actions" data-season-number="' + season.seasonNumber + '" data-watched="' + watched + '">';
+                    if (watched) {
+                        html += '<button class="season-unwatch text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-season="' + season.seasonNumber + '">Unmark Season</button>';
+                        html += '<span class="text-xs font-mono text-zinc-400">update rating</span>';
+                        for (let i=1;i<=5;i++) html += '<button class="season-star text-xs border rounded-sm px-1.5 py-1 hover:bg-amber-50 ' + (rating==i?'bg-amber-100 border-amber-300':'border-zinc-200') + '" data-season="' + season.seasonNumber + '" data-rate="' + i + '">' + i + '\u2605</button>';
+                    } else {
+                        html += '<button class="season-watch-btn text-xs font-mono border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-1" data-season="' + season.seasonNumber + '">Mark Season as Watched</button>';
+                        html += '<span class="text-xs font-mono text-zinc-400">or rate</span>';
+                        for (let i=1;i<=5;i++) html += '<button class="season-star text-xs border border-zinc-200 rounded-sm px-1.5 py-1 hover:bg-amber-50" data-season="' + season.seasonNumber + '" data-rate="' + i + '">' + i + '\u2605</button>';
+                    }
+                    html += '</div></div><span class="text-xs font-mono text-zinc-400 self-center">\u25BC</span></summary>';
+                    html += '<div class="px-4 pb-4 bg-zinc-50">';
+                    if (!episodes.length) html += '<p class="text-xs text-zinc-500">No episodes.</p>';
+                    else {
+                        html += '<div class="space-y-2 mt-2">';
+                        episodes.forEach(ep => {
+                            html += '<div class="flex gap-3 p-3 bg-white border border-zinc-200 rounded-sm episode-row">';
+                            if (ep.stillPath) html += '<img src="' + escapeHtml(imageBase) + '/w300' + escapeHtml(ep.stillPath) + '" alt="Still for ' + escapeHtml(ep.title) + '" class="h-16 w-28 object-cover border border-zinc-200 rounded-sm flex-shrink-0" />';
+                            html += '<div class="flex-1 min-w-0"><div class="flex items-center gap-2"><span class="text-xs font-mono text-zinc-500">E' + ep.episodeNumber + '</span><span class="text-sm font-medium truncate">' + escapeHtml(ep.title) + '</span></div>';
+                            if (ep.airDate) html += '<span class="text-xs font-mono text-zinc-400">' + escapeHtml(ep.airDate) + '</span>';
+                            if (ep.synopsis) html += '<p class="mt-1 text-xs text-zinc-600 line-clamp-2">' + escapeHtml(ep.synopsis) + '</p>';
+                            if (ep.runtime) html += '<span class="text-xs font-mono text-zinc-400">' + ep.runtime + ' min</span>';
+                            html += '</div></div>';
+                        });
+                        html += '</div>';
+                    }
+                    html += '</div></details>';
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        return html;
+    }
+
+    function attachDetailListeners(currentData) {
+        document.getElementById('add-wishlist-btn')?.addEventListener('click', function() {
+            const ext = Number(this.getAttribute('data-external-id'));
+            const mt = this.getAttribute('data-media-type');
+            fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ externalId: ext, mediaType: mt })})
+              .then(r => { if(r.status===201||r.status===409){ loadDetail(mt, ext); } else return r.json().then(j=>{ alert(j.error||'Failed'); }); })
+              .catch(()=> alert('Failed'));
+        });
+        document.querySelectorAll('.watched-star').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const container = document.getElementById('watched-actions');
+            const entryId = container.getAttribute('data-entry-id');
+            const status = container.getAttribute('data-status');
+            const rating = Number(btn.getAttribute('data-rate'));
+            const externalId = Number(container.getAttribute('data-external-id'));
+            const mediaType = container.getAttribute('data-media-type');
+            if (!entryId) {
+              const payload = { externalId: externalId, mediaType: mediaType, status: 'COMPLETED', rating: rating };
+              fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) })
+                .then(r => { if(r.status===201){ loadDetail(mediaType, externalId); } else return r.json().then(j=> alert(j.error||'Failed')); })
+                .catch(()=> alert('Failed'));
+            } else if (status === 'COMPLETED') {
+              fetch('/api/me/library/' + entryId, { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating }) })
+                .then(r => { if(r.ok){ loadDetail(mediaType, externalId); } else return r.json().then(j=> alert(j.error||'Failed')); })
+                .catch(()=> alert('Failed'));
+            } else {
+              fetch('/api/me/library/' + entryId, { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ status: 'COMPLETED', rating: rating }) })
+                .then(r => { if(r.ok){ loadDetail(mediaType, externalId); } else return r.json().then(j=> alert(j.error||'Failed')); })
+                .catch(()=> alert('Failed'));
+            }
+          });
+        });
+        document.getElementById('remove-watched-btn')?.addEventListener('click', () => {
+          const btn = document.getElementById('remove-watched-btn');
+          if (!confirm('Remove from Watched?')) return;
+          const id = btn.getAttribute('data-entry-id');
+          const container = document.getElementById('watched-actions');
+          const externalId = container ? container.getAttribute('data-external-id') : null;
+          const mediaType = container ? container.getAttribute('data-media-type') : null;
+          fetch('/api/me/library/' + id, { method: 'DELETE', credentials: 'include' })
+            .then(r => { if (r.status === 204) { if (externalId && mediaType) loadDetail(mediaType, externalId); else detailContainer.innerHTML=''; } else return r.json().then(j=> alert(j.error||'Failed')); })
+            .catch(()=> alert('Failed'));
+        });
+        function getEntryId() {
+          const c = document.getElementById('seasons-container');
+          if (c) {
+            const v = c.getAttribute('data-entry-id');
+            if (v && v !== '' && v !== 'null') return v;
+          }
+          const w = document.getElementById('watched-actions');
+          if (w) {
+            const v2 = w.getAttribute('data-entry-id');
+            if (v2 && v2 !== '' && v2 !== 'null') return v2;
+          }
+          return null;
+        }
+        function ensureEntryId() {
+          const existing = getEntryId();
+          if (existing) return Promise.resolve(existing);
+          const c = document.getElementById('seasons-container');
+          const ext = c ? Number(c.getAttribute('data-external-id')) : Number(document.getElementById('watched-actions')?.getAttribute('data-external-id'));
+          const mt = c ? c.getAttribute('data-media-type') : document.getElementById('watched-actions')?.getAttribute('data-media-type');
+          const payload = { externalId: ext, mediaType: mt };
+          return fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)})
+            .then(r => {
+              if (r.status===201) return r.json().then(j=> j.id);
+              if (r.status===409) return fetch('/api/me/library?status=WISHLIST&page=0&size=100', { credentials:'include'}).then(rr=> rr.json()).then(data=>{
+                const found = (data.entries||[]).find(e=> e.mediaItem.externalId===ext);
+                if (found) return found.id;
+                throw new Error('already exists but not found');
+              });
+              return r.json().then(j=> { throw new Error(j.error||'Failed to create entry'); });
+            });
+        }
+        document.querySelectorAll('.season-watch-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const seasonNum = btn.getAttribute('data-season');
+            ensureEntryId().then(entryId=>{
+              fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({})})
+                .then(r=>{ if(r.ok) { const c=document.getElementById('seasons-container'); loadDetail(c.getAttribute('data-media-type'), Number(c.getAttribute('data-external-id'))); } else return r.json().then(j=>alert(j.error||'Failed')); })
+                .catch(()=>alert('Failed'));
+            }).catch(e=>alert(e.message||'Failed'));
+          });
+        });
+        document.querySelectorAll('.season-star').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const seasonNum = btn.getAttribute('data-season');
+            const rating = Number(btn.getAttribute('data-rate'));
+            const row = btn.closest('.season-actions');
+            const alreadyWatched = row && row.getAttribute('data-watched') === 'true';
+            ensureEntryId().then(entryId=>{
+              if (alreadyWatched) {
+                fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
+                  .then(r=>{ if(r.ok) { const c=document.getElementById('seasons-container'); loadDetail(c.getAttribute('data-media-type'), Number(c.getAttribute('data-external-id'))); } else return r.json().then(j=>alert(j.error||'Failed')); })
+                  .catch(()=>alert('Failed'));
+              } else {
+                fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ rating: rating})})
+                  .then(r=>{ if(r.ok) { const c=document.getElementById('seasons-container'); loadDetail(c.getAttribute('data-media-type'), Number(c.getAttribute('data-external-id'))); } else return r.json().then(j=>alert(j.error||'Failed')); })
+                  .catch(()=>alert('Failed'));
+              }
+            }).catch(e=>alert(e.message||'Failed'));
+          });
+        });
+        document.querySelectorAll('.season-unwatch').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            if(!confirm('Unmark season?')) return;
+            const seasonNum = btn.getAttribute('data-season');
+            const entryId = getEntryId();
+            if(!entryId){ alert('No library entry'); return; }
+            fetch('/api/me/library/'+entryId+'/seasons/'+seasonNum+'/watch', { method:'DELETE', credentials:'include'})
+              .then(r=>{ if(r.status===204) { const c=document.getElementById('seasons-container'); loadDetail(c.getAttribute('data-media-type'), Number(c.getAttribute('data-external-id'))); } else return r.json().then(j=>alert(j.error||'Failed')); })
+              .catch(()=>alert('Failed'));
+          });
+        });
+    }
+
+    window.loadDetail = function(mediaType, externalId) {
+        detailContainer.innerHTML = '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center text-sm text-zinc-500">Loading ' + escapeHtml(mediaType) + ' ' + externalId + '...</div>';
+        detailContainer.classList.remove('hidden');
+        if (emptyPlaceholder) emptyPlaceholder.classList.add('hidden');
+        const url = new URL(window.location);
+        url.searchParams.set('type', mediaType.toLowerCase());
+        url.searchParams.set('id', externalId);
+        history.pushState({}, '', url);
+        fetch('/api/media/' + encodeURIComponent(mediaType.toLowerCase()) + '/' + encodeURIComponent(externalId), { credentials: 'include' })
+            .then(res => {
+                if (res.status === 401) { detailContainer.innerHTML = '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center"><p class="text-sm text-zinc-600">Please login to view details.</p><a href="/login" class="underline text-sm">Login</a></div>'; return null; }
+                if (res.status === 404) { detailContainer.innerHTML = '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center text-sm text-zinc-500">Media not found.</div>'; return null; }
+                if (!res.ok) { detailContainer.innerHTML = '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center text-sm text-zinc-500">Failed to load details.</div>'; return null; }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                detailContainer.innerHTML = renderDetail(data);
+                attachDetailListeners(data);
+                detailContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            })
+            .catch(() => { detailContainer.innerHTML = '<div class="bg-white border border-zinc-200 rounded-sm shadow-sm p-8 text-center text-sm text-zinc-500">Failed to load.</div>'; });
+    };
 
     input.addEventListener('input', function() {
         const q = input.value.trim();
@@ -91,17 +370,32 @@
         if (q.length < 2) { hint.textContent = q.length ? 'Type at least 2 characters' : ''; hide(); return; }
         debounce = setTimeout(() => fetchSearch(q), 300);
     });
-
     input.addEventListener('keydown', function(e) {
         const count = Math.min(results.length, 5);
-        if (e.key === 'ArrowDown') { e.preventDefault(); selected = Math.min(selected + 1, count - 1); render(); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); selected = Math.max(selected - 1, 0); render(); }
-        else if (e.key === 'Enter' && selected >= 0) { e.preventDefault(); const r = results[selected]; if (r) window.location.href = '/media/' + r.mediaType.toLowerCase() + '/' + r.externalId; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); selected = Math.min(selected + 1, count - 1); renderDropdown(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); selected = Math.max(selected - 1, 0); renderDropdown(); }
+        else if (e.key === 'Enter' && selected >= 0) { e.preventDefault(); const r = results[selected]; if (r) { hide(); loadDetail(r.mediaType, r.externalId); } }
         else if (e.key === 'Escape') { hide(); }
     });
-
     document.addEventListener('click', function(e) {
         if (!input.contains(e.target) && !dropdown.contains(e.target)) hide();
+    });
+
+    // auto-load from query params (e.g. /?type=movie&id=603)
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type');
+        const id = params.get('id');
+        if (type && id) {
+            loadDetail(type, id);
+        }
+    })();
+    window.addEventListener('popstate', () => {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type');
+        const id = params.get('id');
+        if (type && id) loadDetail(type, id);
+        else { detailContainer.classList.add('hidden'); detailContainer.innerHTML=''; if(emptyPlaceholder) emptyPlaceholder.classList.remove('hidden'); }
     });
 })();
 </script>

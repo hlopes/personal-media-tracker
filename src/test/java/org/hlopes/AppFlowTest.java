@@ -43,7 +43,8 @@ public class AppFlowTest {
                 .post("/api/auth/login")
                 .then()
                 .statusCode(303)
-                .header("Location", containsString("/app"))
+                .header("Location", containsString("/"))
+                .header("Location", not(containsString("/app")))
                 .cookie("jwt", notNullValue())
                 .extract()
                 .response();
@@ -84,6 +85,27 @@ public class AppFlowTest {
                 .log()
                 .all()
                 .statusCode(200);
+
+        System.out.println("Testing / with Bearer header");
+        given().header("Authorization", "Bearer " + jwt)
+                .when()
+                .get("/")
+                .then()
+                .log()
+                .all()
+                .statusCode(200)
+                .body(containsString("Welcome"));
+
+        System.out.println("Testing / with cookie");
+        given().cookie("jwt", jwtCookie)
+                .when()
+                .get("/")
+                .then()
+                .log()
+                .all()
+                .statusCode(200)
+                .body(containsString("Welcome"))
+                .body(containsString(email.toLowerCase()));
 
         System.out.println("Testing /app with Bearer header");
         given().header("Authorization", "Bearer " + jwt)

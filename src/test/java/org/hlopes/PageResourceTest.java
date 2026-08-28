@@ -15,14 +15,13 @@ public class PageResourceTest {
 
     @Test
     public void testIndexPage() {
-        given().when()
+        given().redirects()
+                .follow(false)
+                .when()
                 .get("/")
                 .then()
-                .statusCode(200)
-                .contentType(containsString("text/html"))
-                .body(containsString("MediaShelf"))
-                .body(containsString("cdn.tailwindcss.com"))
-                .body(containsString("0.2.0"));
+                .statusCode(303)
+                .header("Location", containsString("/login"));
     }
 
     @Test

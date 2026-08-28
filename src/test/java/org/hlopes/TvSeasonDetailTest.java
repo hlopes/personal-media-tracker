@@ -1,7 +1,7 @@
 package org.hlopes;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.*;
 
 import java.util.Random;
 import java.util.UUID;
@@ -52,13 +52,7 @@ public class TvSeasonDetailTest {
     public void testTvDetailRequiresAuth() {
         Long externalId = nextExternalId();
 
-        given().redirects()
-                .follow(false)
-                .when()
-                .get("/media/tv/" + externalId)
-                .then()
-                .statusCode(303)
-                .header("Location", containsString("/login"));
+        given().when().get("/api/media/tv/" + externalId).then().statusCode(401);
     }
 
     @Test
@@ -70,28 +64,28 @@ public class TvSeasonDetailTest {
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 2);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);
 
-        // first GET should contain seasons and episodes, specials at bottom
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/tv/" + externalId)
+                .get("/api/media/tv/" + externalId)
                 .then()
                 .statusCode(200)
-                .body(containsString("Season 1"))
-                .body(containsString("Season 0"))
-                .body(containsString("Episode 1 of Season 1"))
-                .body(containsString("Episode 1 of Specials"))
-                .body(containsString("/still-1-1.jpg"))
-                .body(containsString("/still-0-1.jpg"))
-                .body(containsString("Seasons"));
+                .body("mediaItem.title", containsString("Test Show"))
+                .body("seasons.size()", is(2))
+                .body("seasons[0].season.name", is("Season 1"))
+                .body("seasons[0].season.seasonNumber", is(1))
+                .body("seasons[0].episodes.size()", is(2))
+                .body("seasons[0].episodes[0].title", is("Episode 1 of Season 1"))
+                .body("seasons[0].episodes[0].stillPath", is("/still-1-1.jpg"))
+                .body("seasons[1].season.name", is("Specials"))
+                .body("seasons[1].episodes[0].title", is("Episode 1 of Specials"))
+                .body("seasons[1].episodes[0].stillPath", is("/still-0-1.jpg"));
 
-        // second GET hits cache (same content)
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/tv/" + externalId)
+                .get("/api/media/tv/" + externalId)
                 .then()
                 .statusCode(200)
-                .body(containsString("Season 1"))
-                .body(containsString("Episode 2 of Season 1"));
+                .body("seasons[0].episodes[1].title", is("Episode 2 of Season 1"));
     }
 
     @Test
@@ -103,17 +97,15 @@ public class TvSeasonDetailTest {
                 testDataHelper.createMediaItem(externalId, MediaTypeEnum.TV_SERIES, "Fallback Show " + externalId);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 1);
 
-        // TMDB is unavailable for random externalId (test-key invalid -> fallback)
-        // cached MediaItem + seasons should still render with empty cast
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/tv/" + externalId)
+                .get("/api/media/tv/" + externalId)
                 .then()
                 .statusCode(200)
-                .body(containsString("Fallback Show"))
-                .body(containsString("Season 1"))
-                .body(containsString("Episode 1 of Season 1"))
-                .body(containsString("/still-1-1.jpg"));
+                .body("mediaItem.title", containsString("Fallback Show"))
+                .body("seasons[0].season.name", is("Season 1"))
+                .body("seasons[0].episodes[0].title", is("Episode 1 of Season 1"))
+                .body("seasons[0].episodes[0].stillPath", is("/still-1-1.jpg"));
     }
 
     @Test
@@ -125,11 +117,11 @@ public class TvSeasonDetailTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/movie/" + externalId)
+                .get("/api/media/movie/" + externalId)
                 .then()
                 .statusCode(200)
-                .body(containsString("Movie Plain"))
-                .body(org.hamcrest.Matchers.not(containsString("<h2 class=\"text-sm font-semibold\">Seasons</h2>")));
+                .body("mediaItem.title", containsString("Movie Plain"))
+                .body("seasons.size()", is(0));
     }
 
     @Test
@@ -142,22 +134,14 @@ public class TvSeasonDetailTest {
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 1, "Season 1", 1);
         testDataHelper.createTvSeasonWithEpisodes(mediaItem, 0, "Specials", 1);
 
-        String html = given().header("Authorization", "Bearer " + jwt)
+        given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/media/tv/" + externalId)
+                .get("/api/media/tv/" + externalId)
                 .then()
                 .statusCode(200)
-                .extract()
-                .body()
-                .asString();
-
-        int idx1 = html.indexOf("Season 1");
-        int idx2 = html.indexOf("Season 2");
-        int idx0 = html.indexOf("Specials");
-
-        // ensure ordering: Season 1 before Season 2 before Specials
-        assert idx1 >= 0 && idx2 >= 0 && idx0 >= 0;
-        assert idx1 < idx2;
-        assert idx2 < idx0;
+                .body("seasons.size()", is(3))
+                .body("seasons[0].season.name", is("Season 1"))
+                .body("seasons[1].season.name", is("Season 2"))
+                .body("seasons[2].season.name", is("Specials"));
     }
 }

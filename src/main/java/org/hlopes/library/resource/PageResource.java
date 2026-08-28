@@ -93,7 +93,7 @@ public class PageResource {
         } catch (Exception e) {
             String msg = URLEncoder.encode("Failed to load wishlist", StandardCharsets.UTF_8);
 
-            return Response.seeOther(URI.create("/app?error=" + msg)).build();
+            return Response.seeOther(URI.create("/?error=" + msg)).build();
         }
     }
 
@@ -166,7 +166,7 @@ public class PageResource {
         } catch (Exception e) {
             String msg = URLEncoder.encode("Failed to load watched", StandardCharsets.UTF_8);
 
-            return Response.seeOther(URI.create("/app?error=" + msg)).build();
+            return Response.seeOther(URI.create("/?error=" + msg)).build();
         }
     }
 
