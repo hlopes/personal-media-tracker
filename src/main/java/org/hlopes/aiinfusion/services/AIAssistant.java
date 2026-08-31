@@ -1,7 +1,11 @@
 package org.hlopes.aiinfusion.services;
 
+import org.hlopes.catalog.service.CatalogService;
+import org.hlopes.library.service.LibraryService;
+
 import dev.langchain4j.service.SystemMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.ToolBox;
 import io.smallrye.mutiny.Multi;
 
 @RegisterAiService
@@ -22,6 +26,9 @@ public interface AIAssistant {
         1. Answer questions about actors, directors, movies, and TV shows directly, accurately, and enthusiastically.
         2. If a user asks a question completely unrelated to movies, TV, or the MediaShelf app (e.g., cooking recipes, math problems, coding assistance), politely state that you can only assist with movie and TV-related topics and invite them to ask something about entertainment or their watchlist.
         3. Keep responses conversational, concise, and helpful.
+
+        When calling tools or functions, strictly use JSON objects, do not wrap in quotes or use plain strings.
      """)
-    Multi<String> streamChat(String userMessage);
+     @ToolBox(value = {CatalogService.class, LibraryService.class})
+     Multi<String> streamChat(String userMessage);
 }

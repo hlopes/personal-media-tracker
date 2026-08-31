@@ -22,6 +22,7 @@ import org.hlopes.catalog.entity.MediaTypeEnum;
 import org.hlopes.catalog.mapper.CatalogMapper;
 import org.hlopes.config.ApplicationConfig;
 
+import dev.langchain4j.agent.tool.Tool;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -47,6 +48,7 @@ public class CatalogService {
     @Inject
     CatalogMapper catalogMapper;
 
+    @Tool("Search a movie or tvseries in TMDB API")
     @CacheResult(cacheName = "catalog-search")
     public CatalogSearchResponse search(String query, String type, int page) {
         String normalized = query == null ? "" : query.trim();

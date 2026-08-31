@@ -16,6 +16,7 @@ import org.hlopes.library.entity.StatusEnum;
 import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
+import dev.langchain4j.agent.tool.Tool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -169,6 +170,7 @@ public class LibraryService {
                 .toList();
     }
 
+    @Tool("Count how many media items are in a given state")
     public long count(String email, String statusParam) {
         String normalizedEmail = email == null ? null : email.trim().toLowerCase();
         User user = userRepository
