@@ -1,6 +1,9 @@
 package org.hlopes.aiinfusion.services;
 
+import org.hlopes.aiinfusion.guardrails.PromptInjectionGuard;
+
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.smallrye.mutiny.Multi;
 
@@ -23,5 +26,6 @@ public interface AIAssistant {
         2. If a user asks a question completely unrelated to movies, TV, or the MediaShelf app (e.g., cooking recipes, math problems, coding assistance), politely state that you can only assist with movie and TV-related topics and invite them to ask something about entertainment or their watchlist.
         3. Keep responses conversational, concise, and helpful.
      """)
+    @InputGuardrails(PromptInjectionGuard.class)
     Multi<String> streamChat(String userMessage);
 }
