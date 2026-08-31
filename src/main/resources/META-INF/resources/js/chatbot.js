@@ -17,6 +17,10 @@
     let wsState = 'CONNECTING';
     let isOpen = false;
     let isLoading = false;
+    let streamingRow = null;
+    let streamingContentEl = null;
+    let streamingText = "";
+    let streamingCopyBtn = null;
 
     function setWsState(state) {
         wsState = state;
@@ -25,6 +29,15 @@
             wsLabel.textContent = state === 'OPEN' ? 'connected' : state === 'CONNECTING' ? 'connecting…' : 'disconnected';
             wsLabel.className = state === 'OPEN' ? 'text-emerald-600' : 'text-zinc-500';
         }
+    }
+
+    function createStreamingRow() {
+        const row = document.createElement('div');
+        row.className = 'border border-zinc-200 rounded-sm p-3 bg-zinc-50';
+        row.innerHTML = '<div class="flex items-center gap-2 text-xs font-mono text-zinc-500"><span class="h-6 w-6 rounded-sm bg-zinc-900 text-white grid place-items-center text-[11px]">AI</span> Assistant <span class="text-zinc-400">via ws</span><span class="ml-auto flex items-center gap-1 text-[11px] font-mono text-zinc-400"><span class="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></span> streaming…</span><button type="button" class="chatbot-copy ml-auto hidden text-[11px] border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-2 py-0.5">Copy</button></div><div class="mt-2 text-sm leading-relaxed text-zinc-700 chatbot-markdown break-words"></div>';
+        messagesEl.appendChild(row);
+        scrollToBottom();
+        return row;
     }
 
     function connect() {
@@ -51,8 +64,30 @@
             if (isLoading) setLoading(false);
         };
         ws.onmessage = function (event) {
-            setLoading(false);
-            appendAssistant(event.data);
+            const token = event.data;
+            if (streamingRow === null) {
+                setLoading(false);
+                streamingRow = createStreamingRow();
+                streamingContentEl = streamingRow.querySelector('.chatbot-markdown');
+                streamingCopyBtn = streamingRow.querySelector('.chatbot-copy');
+                const streamingIndicator = streamingRow.querySelector('.animate-pulse')?.parentElement;
+                if (streamingIndicator) streamingIndicator.classList.add('hidden');
+                if (streamingCopyBtn) streamingCopyBtn.classList.remove('hidden');
+                streamingText = "";
+                if (streamingCopyBtn) {
+                    streamingCopyBtn.addEventListener('click', function () {
+                        navigator.clipboard.writeText(streamingText).then(function () {
+                            streamingCopyBtn.textContent = 'Copied';
+                            setTimeout(function () { streamingCopyBtn.textContent = 'Copy'; }, 1200);
+                        });
+                    });
+                }
+            }
+            streamingText += token;
+            if (streamingContentEl) {
+                streamingContentEl.innerHTML = renderMarkdown(streamingText);
+                scrollToBottom();
+            }
         };
     }
 
@@ -150,6 +185,11 @@
         }
         if (isLoading) return;
         appendUser(t);
+        // reset streaming state for new assistant response
+        streamingRow = null;
+        streamingContentEl = null;
+        streamingText = "";
+        streamingCopyBtn = null;
         setLoading(true);
         input.value = '';
         if (charCount) charCount.textContent = '0';
@@ -162,6 +202,10 @@
 
     function clearMessages() {
         messagesEl.innerHTML = initialWelcomeHtml;
+        streamingRow = null;
+        streamingContentEl = null;
+        streamingText = "";
+        streamingCopyBtn = null;
         // re-bind quick buttons after reset (they are inside messagesEl)
         messagesEl.querySelectorAll('[data-quick]').forEach(function (btn) {
             btn.addEventListener('click', function () {
