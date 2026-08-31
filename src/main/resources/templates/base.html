@@ -34,6 +34,34 @@
     <style>
         /* Sharp focus only */
         *:focus-visible { outline: none; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 999px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.9s linear infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .shimmer { background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 37%, #f4f4f5 63%); background-size: 400% 100%; animation: shimmer 1.4s infinite; }
+        /* Chatbot markdown reading mode */
+        .chatbot-markdown h1, .chatbot-markdown h2, .chatbot-markdown h3 { font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem; line-height: 1.25; }
+        .chatbot-markdown h1 { font-size: 1.125rem; }
+        .chatbot-markdown h2 { font-size: 1rem; }
+        .chatbot-markdown h3 { font-size: 0.9375rem; }
+        .chatbot-markdown p { margin: 0.5rem 0; line-height: 1.6; }
+        .chatbot-markdown ul, .chatbot-markdown ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+        .chatbot-markdown ul { list-style: disc; }
+        .chatbot-markdown ol { list-style: decimal; }
+        .chatbot-markdown li { margin: 0.25rem 0; }
+        .chatbot-markdown pre { background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 0.25rem; padding: 0.75rem; overflow-x: auto; font-size: 0.8125rem; font-family: JetBrains Mono, monospace; margin: 0.5rem 0; white-space: pre; }
+        .chatbot-markdown code { background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 0.2rem; padding: 0.1rem 0.25rem; font-family: JetBrains Mono, monospace; font-size: 0.8125rem; }
+        .chatbot-markdown pre code { background: transparent; border: 0; padding: 0; white-space: pre; }
+        .chatbot-markdown blockquote { border-left: 3px solid #e4e4e7; padding-left: 0.75rem; color: #52525b; margin: 0.5rem 0; font-style: italic; }
+        .chatbot-markdown a { color: #18181b; text-decoration: underline; text-underline-offset: 2px; }
+        .chatbot-markdown a:hover { color: #000; }
+        .chatbot-markdown table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8125rem; }
+        .chatbot-markdown th, .chatbot-markdown td { border: 1px solid #e4e4e7; padding: 0.35rem 0.5rem; text-align: left; }
+        .chatbot-markdown th { background: #fafafa; font-weight: 600; }
+        .chatbot-markdown hr { border: none; border-top: 1px solid #e4e4e7; margin: 0.75rem 0; }
+        .chatbot-markdown strong { font-weight: 600; }
+        .chatbot-markdown em { font-style: italic; }
     </style>
 </head>
 <body class="min-h-screen bg-zinc-50 text-zinc-900 font-sans antialiased">
@@ -95,5 +123,76 @@
             menu.classList.toggle('hidden');
         });
     </script>
+
+    {#if currentUser}
+    <!-- Chatbot — Variant C (Overlay Expansive) — Final — only for authenticated users -->
+    <button id="chatbot-trigger" class="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-3 bg-white text-zinc-900 border border-zinc-200 border-r-0 rounded-l-2xl pl-3 pr-4 py-3.5 shadow-xl hover:pr-5 transition-all" aria-label="Open chat">
+        <span class="h-8 w-8 rounded-full bg-zinc-900 text-white grid place-items-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </span>
+        <span class="hidden md:flex flex-col items-start leading-none">
+            <span class="text-xs font-semibold tracking-wide">Chat</span>
+            <span class="text-[11px] font-mono text-zinc-500">AI assistant</span>
+        </span>
+    </button>
+
+    <div id="chatbot-overlay" class="fixed inset-0 bg-zinc-900/30 backdrop-blur-sm z-30 hidden"></div>
+
+    <div id="chatbot-panel" class="fixed z-40 hidden flex-col bg-white border border-zinc-200 shadow-2xl overflow-hidden right-6 top-6 bottom-6 w-[min(440px,calc(100vw-32px))] rounded-xl">
+        <div class="shrink-0 flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+            <div>
+                <div class="text-sm font-semibold tracking-tight flex items-center gap-2">MediaShelf Copilot <span class="text-[10px] font-mono font-medium tracking-widest uppercase bg-zinc-900 text-white px-1.5 py-0.5 rounded-sm">WS</span></div>
+                <div class="text-xs font-mono text-zinc-500 flex items-center gap-2"><span id="chatbot-ws-dot" class="h-2 w-2 rounded-full bg-amber-400"></span><span id="chatbot-ws-label">connecting…</span><span class="opacity-40">·</span> model <span class="bg-zinc-50 border px-1 rounded">LFM2.5</span></div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button id="chatbot-clear" type="button" class="h-8 px-2 text-xs font-mono border border-zinc-200 rounded-sm bg-white hover:bg-zinc-50">Clear</button>
+                <button id="chatbot-close" class="h-8 w-8 grid place-items-center border border-zinc-200 rounded-sm bg-white hover:bg-zinc-50" aria-label="Close chat">✕</button>
+            </div>
+        </div>
+
+        <div id="chatbot-messages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-white scrollbar-thin">
+            <div class="border border-zinc-200 rounded-sm p-4 bg-zinc-50">
+                <div class="text-xs font-semibold flex items-center gap-2"><span class="h-6 w-6 rounded-sm bg-zinc-900 text-white grid place-items-center text-[11px]">AI</span> How can I help?</div>
+                <p class="mt-2 text-sm leading-relaxed text-zinc-600">Ask for recommendations, summarize your library, or dig into cast & seasons.</p>
+                <div class="mt-3 grid grid-cols-1 gap-2">
+                    <button type="button" data-quick="Find me a feel-good movie under 2 hours" class="text-left text-sm border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-3 py-2">Find me a feel-good movie under 2h →</button>
+                    <button type="button" data-quick="What unwatched seasons do I have?" class="text-left text-sm border border-zinc-200 bg-white hover:bg-zinc-50 rounded-sm px-3 py-2">What unwatched seasons do I have? →</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="chatbot-loading" class="hidden shrink-0 px-5 pb-3">
+            <div class="flex items-center gap-3 border border-zinc-200 rounded-sm bg-zinc-50 p-3">
+                <span class="h-8 w-8 rounded-full bg-white border border-zinc-200 grid place-items-center">
+                    <span class="h-5 w-5 rounded-full border-2 border-zinc-200 border-t-zinc-900 spin"></span>
+                </span>
+                <div class="flex-1">
+                    <div class="text-xs font-mono text-zinc-600">Assistant is generating a response…</div>
+                    <div class="mt-1 flex gap-2">
+                        <span class="h-1.5 w-24 shimmer rounded-full"></span>
+                        <span class="h-1.5 w-16 shimmer rounded-full"></span>
+                        <span class="h-1.5 w-10 shimmer rounded-full"></span>
+                    </div>
+                </div>
+                <span class="text-[11px] font-mono text-zinc-400">via WS</span>
+            </div>
+        </div>
+
+        <form id="chatbot-form" class="shrink-0 p-3 border-t border-zinc-200 bg-zinc-50">
+            <div class="bg-white border border-zinc-200 rounded-sm shadow-sm flex items-end gap-2 p-2 focus-within:border-zinc-300">
+                <textarea id="chatbot-input" rows="1" placeholder="Message MediaShelf AI… (Enter to send)" maxlength="1000" class="flex-1 resize-none max-h-28 text-sm outline-none placeholder:text-zinc-400 py-1.5 px-1"></textarea>
+                <button type="submit" class="px-4 py-2 bg-zinc-900 text-white rounded-sm border border-zinc-900 text-sm font-medium hover:bg-zinc-800 shrink-0">Send</button>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                <span><span id="chatbot-char-count">0</span>/1000</span>
+                <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span> end-to-end encrypted</span>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+    <script src="/js/chatbot.js"></script>
+    {/if}
 </body>
 </html>
