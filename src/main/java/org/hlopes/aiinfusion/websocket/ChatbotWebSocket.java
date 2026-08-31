@@ -9,7 +9,7 @@ import io.quarkus.websockets.next.OnOpen;
 import io.quarkus.websockets.next.OnTextMessage;
 import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
-import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.smallrye.mutiny.Multi;
 import jakarta.inject.Inject;
 
 @WebSocket(path = "/chatbot")
@@ -27,14 +27,13 @@ public class ChatbotWebSocket {
     }
 
     @OnTextMessage
-    @RunOnVirtualThread
-    public String onMessage(String userMessage, WebSocketConnection connection) {
+    public Multi<String> onMessage(String userMessage, WebSocketConnection connection) {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            return "Please login to use the chatbot.";
+            return Multi.createFrom().item("Please login to use the chatbot.");
         }
 
         if (userMessage == null || userMessage.isBlank()) {
-            return "Please send a message.";
+            return Multi.createFrom().item("Please send a message.");
         }
 
         String trimmed = userMessage.trim();
@@ -45,15 +44,12 @@ public class ChatbotWebSocket {
 
         Log.debugf("Chatbot WS message from %s (%s): %s", connection.id(), jwt.getSubject(), trimmed);
 
-        try {
-            String reply = aiAssistant.chat(trimmed);
-
-            return reply != null ? reply : "Sorry, I could not generate a response.";
-        } catch (Exception e) {
-            Log.errorf(e, "Chatbot WS error for %s", connection.id());
-
-            return "Sorry, I encountered an error. Please try again.";
-        }
+        return aiAssistant
+                .streamChat(trimmed)
+                .onFailure()
+                .invoke(e -> Log.errorf(e, "Chatbot WS stream error for %s", connection.id()))
+                .onFailure()
+                .recoverWithItem("Sorry, I encountered an error. Please try again.");
     }
 
     @OnClose
