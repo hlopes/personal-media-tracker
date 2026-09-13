@@ -67,3 +67,11 @@ _Avoid_: Watched as status value, finished
 **Catalog**:
 The external source of truth for searchable works (TMDB in phase 2), queried server-side via a proxied search and detail. The system never stores Catalog credentials in the browser.
 _Avoid_: Provider, API as domain term
+
+**Image Guess**:
+An ephemeral attempt to identify a MediaItem from a user-supplied image.
+_Avoid_: File upload as domain term, image recognition, prediction
+
+**Image-to-Wishlist Workflow**:
+A sequential flow that identifies a MediaItem from a user-supplied image — vision extraction, then web-assisted identification verified against the Catalog, then a Library Entry lookup — suggesting an add to the Wishlist when the match is absent.
+_Avoid_: SequenceAgent as domain term, image recognition, prediction

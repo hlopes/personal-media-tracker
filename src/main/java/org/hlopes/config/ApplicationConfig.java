@@ -1,6 +1,7 @@
 package org.hlopes.config;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -13,6 +14,8 @@ public interface ApplicationConfig {
     Jwt jwt();
 
     Tmdb tmdb();
+
+    Tavily tavily();
 
     interface Verification {
 
@@ -45,5 +48,22 @@ public interface ApplicationConfig {
 
         @WithDefault("3S")
         Duration timeout();
+    }
+
+    interface Tavily {
+
+        Optional<String> apiKey();
+
+        @WithDefault("https://api.tavily.com")
+        String baseUrl();
+
+        @WithDefault("advanced")
+        String searchDepth();
+
+        @WithDefault("5")
+        int maxResults();
+
+        @WithDefault("imdb.com,themoviedb.org,wikipedia.org")
+        String includeDomains();
     }
 }
