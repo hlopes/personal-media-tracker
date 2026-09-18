@@ -10,9 +10,9 @@ public record MediaDetailEnrichedResponse(
         String posterUrl,
         String backdropUrl,
         String imageBase,
-        boolean alreadyInWishlist,
+        boolean alreadyInWatchlist,
         boolean alreadyInWatched,
         String currentStatus,
-        Integer currentRating,
+        Short currentRating,
         UUID currentEntryId,
         List<EnrichedSeasonDto> seasons) {}

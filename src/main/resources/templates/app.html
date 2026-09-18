@@ -106,7 +106,7 @@
         const backdropUrl = data.backdropUrl;
         const imageBase = data.imageBase;
         const alreadyInWatched = data.alreadyInWatched;
-        const alreadyInWishlist = data.alreadyInWishlist;
+        const alreadyInWatchlist = data.alreadyInWatchlist;
         const currentRating = data.currentRating;
         const currentEntryId = data.currentEntryId;
         const currentStatus = data.currentStatus;
@@ -138,14 +138,14 @@
             for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border rounded-sm px-2 py-1 hover:bg-amber-50 ' + (currentRating==i?'bg-amber-100 border-amber-300':'border-zinc-200') + '">' + i + '\u2605</button>';
             html += '</div></div>';
             html += '<button id="remove-watched-btn" data-entry-id="' + (currentEntryId||'') + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Remove from Watched</button>';
-        } else if (alreadyInWishlist) {
-            html += '<button id="remove-wishlist-btn" data-entry-id="' + (currentEntryId||'') + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Remove from Wishlist</button>';
+        } else if (alreadyInWatchlist) {
+            html += '<button id="remove-watchlist-btn" data-entry-id="' + (currentEntryId||'') + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Remove from Watchlist</button>';
             html += '<div id="watched-actions" data-entry-id="' + (currentEntryId||'') + '" data-status="' + (currentStatus||'') + '" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '">';
             html += '<p class="text-xs font-mono text-zinc-600 mb-1">Mark as Watched:</p><div class="flex gap-1">';
             for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">' + i + '\u2605</button>';
             html += '</div></div>';
         } else {
-            html += '<div class="inline"><button id="add-wishlist-btn" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Add to Wishlist</button></div>';
+            html += '<div class="inline"><button id="add-watchlist-btn" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '" class="px-3 py-1.5 bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 text-sm border border-zinc-900">Add to Watchlist</button></div>';
             html += '<div id="watched-actions" data-entry-id="" data-status="" data-external-id="' + m.externalId + '" data-media-type="' + escapeHtml(m.mediaType) + '" class="mt-3">';
             html += '<p class="text-xs font-mono text-zinc-600 mb-1">Or mark as Watched:</p><div class="flex gap-1">';
             for (let i=1;i<=5;i++) html += '<button data-rate="' + i + '" class="watched-star text-sm border border-zinc-200 rounded-sm px-2 py-1 hover:bg-amber-50">' + i + '\u2605</button>';
@@ -225,7 +225,7 @@
     }
 
     function attachDetailListeners(currentData) {
-        document.getElementById('add-wishlist-btn')?.addEventListener('click', function() {
+        document.getElementById('add-watchlist-btn')?.addEventListener('click', function() {
             const ext = Number(this.getAttribute('data-external-id'));
             const mt = this.getAttribute('data-media-type');
             fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ externalId: ext, mediaType: mt })})
@@ -269,10 +269,10 @@
             .catch(()=> alert('Failed'));
         });
 
-        document.getElementById('remove-wishlist-btn')?.addEventListener('click', () => {
-          const btn = document.getElementById('remove-wishlist-btn');
-          
-          if (!confirm('Remove from Wishlist?')) {
+        document.getElementById('remove-watchlist-btn')?.addEventListener('click', () => {
+          const btn = document.getElementById('remove-watchlist-btn');
+
+          if (!confirm('Remove from Watchlist?')) {
             return;
           }
 
@@ -309,7 +309,7 @@
           return fetch('/api/me/library', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)})
             .then(r => {
               if (r.status===201) return r.json().then(j=> j.id);
-              if (r.status===409) return fetch('/api/me/library?status=WISHLIST&page=0&size=100', { credentials:'include'}).then(rr=> rr.json()).then(data=>{
+              if (r.status===409) return fetch('/api/me/library?status=WATCHLIST&page=0&size=100', { credentials:'include'}).then(rr=> rr.json()).then(data=>{
                 const found = (data.entries||[]).find(e=> e.mediaItem.externalId===ext);
                 if (found) return found.id;
                 throw new Error('already exists but not found');

@@ -37,11 +37,11 @@
                                     {#if s.watched}✓{/if}
                                     {#if s.watched && s.rating}
                                         <span class="text-amber-600">
-                                            {#if s.rating == 5}★★★★★{/if}
-                                            {#if s.rating == 4}★★★★☆{/if}
-                                            {#if s.rating == 3}★★★☆☆{/if}
-                                            {#if s.rating == 2}★★☆☆☆{/if}
-                                            {#if s.rating == 1}★☆☆☆☆{/if}
+                                            {#if s.rating.intValue == 5}★★★★★{/if}
+                                            {#if s.rating.intValue == 4}★★★★☆{/if}
+                                            {#if s.rating.intValue == 3}★★★☆☆{/if}
+                                            {#if s.rating.intValue == 2}★★☆☆☆{/if}
+                                            {#if s.rating.intValue == 1}★☆☆☆☆{/if}
                                         </span>
                                     {#else if s.watched}
                                         <span class="text-zinc-500"></span>
@@ -56,19 +56,19 @@
                     {/if}
                 {#else}
                 <div class="text-sm text-amber-500 tracking-tight mt-1">
-                    {#if entry.rating == 5}★★★★★{/if}
-                    {#if entry.rating == 4}★★★★☆{/if}
-                    {#if entry.rating == 3}★★★☆☆{/if}
-                    {#if entry.rating == 2}★★☆☆☆{/if}
-                    {#if entry.rating == 1}★☆☆☆☆{/if}
+                    {#if entry.rating.intValue == 5}★★★★★{/if}
+                    {#if entry.rating.intValue == 4}★★★★☆{/if}
+                    {#if entry.rating.intValue == 3}★★★☆☆{/if}
+                    {#if entry.rating.intValue == 2}★★☆☆☆{/if}
+                    {#if entry.rating.intValue == 1}★☆☆☆☆{/if}
                     <span class="text-xs font-mono text-zinc-500">({entry.rating}/5)</span>
                 </div>
                 <div class="flex gap-1 mt-1" data-entry-id="{entry.id}" data-current-rating="{entry.rating}">
-                    <button data-rate="1" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 1}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">1★</button>
-                    <button data-rate="2" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 2}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">2★</button>
-                    <button data-rate="3" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 3}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">3★</button>
-                    <button data-rate="4" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">4★</button>
-                    <button data-rate="5" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">5★</button>
+                    <button data-rate="1" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating.intValue == 1}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">1★</button>
+                    <button data-rate="2" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating.intValue == 2}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">2★</button>
+                    <button data-rate="3" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating.intValue == 3}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">3★</button>
+                    <button data-rate="4" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating.intValue == 4}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">4★</button>
+                    <button data-rate="5" class="rate-btn text-xs border rounded-sm px-1 py-0.5 hover:bg-amber-50 {#if entry.rating.intValue == 5}bg-amber-100 border-amber-300{#else}border-zinc-200{/if}">5★</button>
                 </div>
                 {/if}
             </div>

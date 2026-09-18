@@ -51,7 +51,8 @@ public class SeasonWatchResource {
             @PathParam("seasonNumber") int seasonNumber,
             SeasonWatchRequest request) {
         String email = jwt.getSubject();
-        Integer rating = request == null ? null : request.rating();
+        Short rating = request == null ? null : request.rating();
+
         return seasonWatchService.watchSeason(email, libraryEntryId, seasonNumber, rating);
     }
 
@@ -68,6 +69,7 @@ public class SeasonWatchResource {
                     .entity(Map.of("error", "rating must be between 1 and 5"))
                     .build());
         }
+
         return seasonWatchService.updateSeasonWatch(email, libraryEntryId, seasonNumber, request.rating());
     }
 

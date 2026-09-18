@@ -1,9 +1,9 @@
--- V3: library_entries — association User <-> MediaItem for Wishlist (phase 2: WISHLIST only)
+-- V3: library_entries — association User <-> MediaItem for watchlist (phase 2: watchlist only)
 CREATE TABLE library_entries (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     media_item_id UUID NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('WISHLIST', 'IN_PROGRESS', 'COMPLETED', 'DROPPED', 'ON_HOLD')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('WATCHLIST', 'IN_PROGRESS', 'COMPLETED', 'DROPPED', 'ON_HOLD')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

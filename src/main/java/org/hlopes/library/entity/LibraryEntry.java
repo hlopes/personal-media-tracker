@@ -46,7 +46,7 @@ public class LibraryEntry extends PanacheEntityBase {
     public StatusEnum status;
 
     @Column(name = "rating")
-    public Integer rating;
+    public Short rating;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

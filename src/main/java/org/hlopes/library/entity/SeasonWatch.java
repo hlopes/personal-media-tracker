@@ -45,7 +45,7 @@ public class SeasonWatch extends PanacheEntityBase {
     public TvSeason season;
 
     @Column(name = "rating")
-    public Integer rating;
+    public Short rating;
 
     @Column(name = "watched_at", nullable = false)
     public Instant watchedAt;

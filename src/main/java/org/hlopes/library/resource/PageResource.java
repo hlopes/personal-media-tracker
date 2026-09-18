@@ -59,17 +59,17 @@ public class PageResource {
     MediaItemRepository mediaItemRepository;
 
     @Inject
-    @Location("library/wishlist")
-    Template wishlist;
+    @Location("library/watchlist")
+    Template watchlist;
 
     @Inject
     @Location("library/watched")
     Template watched;
 
     @GET
-    @Path("wishlist")
+    @Path("watchlist")
     @PermitAll
-    public Response getWishlist(
+    public Response getWatchlist(
             @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("20") int size) {
         try {
             String email = jwt != null ? jwt.getSubject() : null;
@@ -78,20 +78,20 @@ public class PageResource {
                 throw new NotAuthorizedException("Not logged in");
             }
 
-            var entries = libraryService.list(email, "WISHLIST", page, size);
-            long total = libraryService.count(email, "WISHLIST");
+            var entries = libraryService.list(email, "WATCHLIST", page, size);
+            long total = libraryService.count(email, "WATCHLIST");
 
             TemplateInstance instance =
-                    wishlist.data("entries", entries).data("total", total).data("currentUser", email);
+                    watchlist.data("entries", entries).data("total", total).data("currentUser", email);
 
             return Response.ok(instance).build();
 
         } catch (NotAuthorizedException e) {
-            String msg = URLEncoder.encode("Please login to view wishlist", StandardCharsets.UTF_8);
+            String msg = URLEncoder.encode("Please login to view watchlist", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/login?error=" + msg)).build();
         } catch (Exception e) {
-            String msg = URLEncoder.encode("Failed to load wishlist", StandardCharsets.UTF_8);
+            String msg = URLEncoder.encode("Failed to load watchlist", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/?error=" + msg)).build();
         }
@@ -175,6 +175,7 @@ public class PageResource {
         if (mediaItemDto == null || mediaItemDto.id() == null) {
             return List.of();
         }
+
         UUID mediaItemId = mediaItemDto.id();
         Map<UUID, SeasonWatch> watchMap = Map.of();
 
@@ -189,6 +190,7 @@ public class PageResource {
             }
         } catch (Exception ignored) {
         }
+
         List<EnrichedSeasonDto> result = new ArrayList<>();
 
         for (SeasonWithEpisodesDto sw : rawSeasons) {
@@ -207,7 +209,7 @@ public class PageResource {
             }
 
             var watch = watchMap.get(sw.season().id());
-            Integer rating = watch != null ? watch.rating : null;
+            Short rating = watch != null ? watch.rating : null;
             var watchedAt = watch != null ? watch.watchedAt : null;
 
             result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watch != null, rating, watchedAt));
