@@ -105,7 +105,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/api/me/library?status=WISHLIST")
+                .get("/api/me/library?status=watchlist")
                 .then()
                 .statusCode(200)
                 .body("entries.size()", is(0));
@@ -123,7 +123,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/wishlist")
+                .get("/watchlist")
                 .then()
                 .statusCode(200)
                 .body(not(containsString("★★★★★")));
@@ -173,7 +173,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
-                .body("{\"externalId\":" + ext4 + ",\"mediaType\":\"movie\",\"status\":\"WISHLIST\",\"rating\":3}")
+                .body("{\"externalId\":" + ext4 + ",\"mediaType\":\"movie\",\"status\":\"watchlist\",\"rating\":3}")
                 .when()
                 .post("/api/me/library")
                 .then()
@@ -190,7 +190,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
-                .body("{\"externalId\":" + ext5 + ",\"mediaType\":\"movie\",\"status\":\"WISHLIST\",\"rating\":null}")
+                .body("{\"externalId\":" + ext5 + ",\"mediaType\":\"movie\",\"status\":\"watchlist\",\"rating\":null}")
                 .when()
                 .post("/api/me/library")
                 .then()
@@ -250,7 +250,7 @@ public class WatchedLibraryTest {
     }
 
     @Test
-    public void testTransitionWishlistToWatched() {
+    public void testTransitionwatchlistToWatched() {
         String email = "trans-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
         Long externalId = nextExternalId();
@@ -263,7 +263,7 @@ public class WatchedLibraryTest {
                 .post("/api/me/library")
                 .then()
                 .statusCode(201)
-                .body("status", is("WISHLIST"))
+                .body("status", is("watchlist"))
                 .body("rating", nullValue())
                 .extract()
                 .path("id");
@@ -280,7 +280,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/api/me/library?status=WISHLIST")
+                .get("/api/me/library?status=watchlist")
                 .then()
                 .statusCode(200)
                 .body("entries.size()", is(0));
@@ -303,17 +303,17 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
-                .body("{\"status\":\"WISHLIST\"}")
+                .body("{\"status\":\"watchlist\"}")
                 .when()
                 .patch("/api/me/library/" + entryId)
                 .then()
                 .statusCode(200)
-                .body("status", is("WISHLIST"))
+                .body("status", is("watchlist"))
                 .body("rating", nullValue());
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/api/me/library?status=WISHLIST")
+                .get("/api/me/library?status=watchlist")
                 .then()
                 .statusCode(200)
                 .body("entries.size()", is(1));
@@ -427,12 +427,12 @@ public class WatchedLibraryTest {
     }
 
     @Test
-    public void testDetailPageShowsWatchedAndWishlistStates() {
+    public void testDetailPageShowsWatchedAndwatchlistStates() {
         String email = "detail-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         String jwt = registerAndGetJwt(email, "password123");
 
-        Long extWishlist = nextExternalId();
-        testDataHelper.createMediaItem(extWishlist, MediaTypeEnum.MOVIE, "Detail Wishlist Movie");
+        Long extwatchlist = nextExternalId();
+        testDataHelper.createMediaItem(extwatchlist, MediaTypeEnum.MOVIE, "Detail watchlist Movie");
         Long extWatched = nextExternalId();
         testDataHelper.createMediaItem(extWatched, MediaTypeEnum.TV_SERIES, "Detail Watched Show");
 
@@ -441,7 +441,7 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .contentType(ContentType.JSON)
-                .body("{\"externalId\":" + extWishlist + ",\"mediaType\":\"movie\"}")
+                .body("{\"externalId\":" + extwatchlist + ",\"mediaType\":\"movie\"}")
                 .when()
                 .post("/api/me/library")
                 .then()
@@ -457,12 +457,12 @@ public class WatchedLibraryTest {
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
-                .get("/api/media/movie/" + extWishlist)
+                .get("/api/media/movie/" + extwatchlist)
                 .then()
                 .statusCode(200)
-                .body("alreadyInWishlist", is(true))
+                .body("alreadyInwatchlist", is(true))
                 .body("alreadyInWatched", is(false))
-                .body("currentStatus", is("WISHLIST"));
+                .body("currentStatus", is("watchlist"));
 
         given().header("Authorization", "Bearer " + jwt)
                 .when()
@@ -470,7 +470,7 @@ public class WatchedLibraryTest {
                 .then()
                 .statusCode(200)
                 .body("alreadyInWatched", is(true))
-                .body("alreadyInWishlist", is(false))
+                .body("alreadyInwatchlist", is(false))
                 .body("currentStatus", is("COMPLETED"))
                 .body("currentRating", is(4));
 
@@ -479,7 +479,7 @@ public class WatchedLibraryTest {
                 .get("/api/media/movie/" + extNone)
                 .then()
                 .statusCode(200)
-                .body("alreadyInWishlist", is(false))
+                .body("alreadyInwatchlist", is(false))
                 .body("alreadyInWatched", is(false));
     }
 
@@ -493,7 +493,7 @@ public class WatchedLibraryTest {
                 .get("/app")
                 .then()
                 .statusCode(200)
-                .body(containsString("href=\"/wishlist\""))
+                .body(containsString("href=\"/watchlist\""))
                 .body(containsString("href=\"/watched\""))
                 .body(containsString(">Watched<"));
 

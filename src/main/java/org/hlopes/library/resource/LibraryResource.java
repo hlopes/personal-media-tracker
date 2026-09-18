@@ -20,7 +20,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("/api/me/library")
-@Tag(name = "Library", description = "Personal Wishlist — Library Entry management")
+@Tag(name = "Library", description = "Personal watchlist — Library Entry management")
 public class LibraryResource {
 
     @Inject
@@ -61,7 +61,7 @@ public class LibraryResource {
     @RolesAllowed("User")
     @Produces(MediaType.APPLICATION_JSON)
     public PaginatedLibraryResponse list(
-            @QueryParam("status") @DefaultValue("WISHLIST") String status,
+            @QueryParam("status") @DefaultValue("WATCHLIST") String status,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
         String email = jwt.getSubject();

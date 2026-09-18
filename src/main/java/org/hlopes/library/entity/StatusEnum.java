@@ -1,7 +1,7 @@
 package org.hlopes.library.entity;
 
 public enum StatusEnum {
-    WISHLIST,
+    WATCHLIST,
     IN_PROGRESS,
     COMPLETED,
     DROPPED,

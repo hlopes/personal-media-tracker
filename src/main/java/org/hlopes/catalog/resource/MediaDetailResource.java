@@ -117,10 +117,10 @@ public class MediaDetailResource {
                                 mediaItem.releaseDate);
 
                         var user = authService.getUserOrNull(email);
-                        boolean alreadyInWishlist = false;
+                        boolean alreadyInwatchlist = false;
                         boolean alreadyInWatched = false;
                         String currentStatus = null;
-                        Integer currentRating = null;
+                        Short currentRating = null;
                         UUID currentEntryId = null;
 
                         if (user != null) {
@@ -131,7 +131,7 @@ public class MediaDetailResource {
                                 currentStatus = en.status.name();
                                 currentRating = en.rating;
                                 currentEntryId = en.id;
-                                alreadyInWishlist = en.status == StatusEnum.WISHLIST;
+                                alreadyInwatchlist = en.status == StatusEnum.WATCHLIST;
                                 alreadyInWatched = en.status == StatusEnum.COMPLETED;
                             }
                         }
@@ -152,7 +152,7 @@ public class MediaDetailResource {
                                 posterUrl,
                                 backdropUrl,
                                 imageBase,
-                                alreadyInWishlist,
+                                alreadyInwatchlist,
                                 alreadyInWatched,
                                 currentStatus,
                                 currentRating,
@@ -186,10 +186,10 @@ public class MediaDetailResource {
                 mediaItemDto.backdropPath() != null ? imageBase + "/w1280" + mediaItemDto.backdropPath() : null;
 
         var user = authService.getUserOrNull(email);
-        boolean alreadyInWishlist = false;
+        boolean alreadyInwatchlist = false;
         boolean alreadyInWatched = false;
         String currentStatus = null;
-        Integer currentRating = null;
+        Short currentRating = null;
         UUID currentEntryId = null;
 
         if (user != null) {
@@ -200,7 +200,7 @@ public class MediaDetailResource {
                 currentStatus = e.status.name();
                 currentRating = e.rating;
                 currentEntryId = e.id;
-                alreadyInWishlist = e.status == StatusEnum.WISHLIST;
+                alreadyInwatchlist = e.status == StatusEnum.WATCHLIST;
                 alreadyInWatched = e.status == StatusEnum.COMPLETED;
             }
         }
@@ -223,7 +223,7 @@ public class MediaDetailResource {
                 posterUrl,
                 backdropUrl,
                 imageBase,
-                alreadyInWishlist,
+                alreadyInwatchlist,
                 alreadyInWatched,
                 currentStatus,
                 currentRating,
@@ -268,7 +268,7 @@ public class MediaDetailResource {
             }
             var watch = watchMap.get(sw.season().id());
             boolean watched = watch != null;
-            Integer rating = watched ? watch.rating : null;
+            Short rating = watched ? watch.rating : null;
             var watchedAt = watched ? watch.watchedAt : null;
             result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watched, rating, watchedAt));
         }
