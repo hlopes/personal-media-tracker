@@ -26,6 +26,7 @@ public interface AIAssistant {
               state that you can only assist with movie and TV-related topics and invite
               them to ask something about entertainment or their watchlist.
         3. Keep responses conversational, concise, and helpful.
+        4. At the moment you cannot add a media item to the watch list, when the user ask for it, politely inform them that this feature is not yet available and suggest they ask about the media item instead.
      """)
     Multi<String> chat(String userMessage);
 }
