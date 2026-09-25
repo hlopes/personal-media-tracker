@@ -10,6 +10,8 @@
     const charCount = document.getElementById('chatbot-char-count');
     const wsDot = document.getElementById('chatbot-ws-dot');
     const wsLabel = document.getElementById('chatbot-ws-label');
+    const uploadBtn = document.getElementById('chatbot-upload-btn');
+    const fileInput = document.getElementById('chatbot-file');
 
     if (!trigger || !panel || !messagesEl || !form || !input) return;
 
@@ -158,6 +160,67 @@
         scrollToBottom();
     }
 
+    function appendUserImage(dataUrl, fileName) {
+        const row = document.createElement('div');
+        row.className = 'flex justify-end';
+        row.innerHTML = '<div class="max-w-[75%] bg-zinc-900 text-white rounded-sm px-3 py-2 text-sm leading-relaxed"><img src="' + dataUrl + '" alt="uploaded image" class="max-h-48 rounded-sm"><div class="text-[11px] font-mono text-zinc-400 mt-1 text-right">you · ' + escapeHtml(fileName || 'image') + '</div></div>';
+        messagesEl.appendChild(row);
+        scrollToBottom();
+    }
+
+    function formatIdentification(data) {
+        if (!data || !data.identified) {
+            return (data && data.message) || "I wasn't able to identify the movie/show from this image.";
+        }
+        const kind = data.mediaType === 'TV_SERIES' ? 'TV Series' : 'Movie';
+        const year = data.year ? ' (' + data.year + ')' : '';
+        let md = '**' + data.title + '**' + year + ' · ' + kind;
+        if (data.description) md += '\n\n' + data.description;
+        if (data.catalogType && data.catalogId) {
+            md += '\n\n[View in catalog](/?type=' + data.catalogType + '&id=' + data.catalogId + ')';
+        }
+        return md;
+    }
+
+    function uploadImage(file) {
+        if (!file) return;
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (allowed.indexOf(file.type) < 0) {
+            appendAssistant('Unsupported image type, use jpg, png or webp.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            appendAssistant('Image too large, max 5MB.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function () {
+            appendUserImage(reader.result, file.name);
+            setLoading(true);
+            const fd = new FormData();
+            fd.append('image', file, file.name);
+            fetch('/api/chat/image', { method: 'POST', body: fd, credentials: 'same-origin' })
+                .then(function (res) { return res.json().then(function (body) { return { status: res.status, body: body }; }); })
+                .then(function (parsed) {
+                    setLoading(false);
+                    if (parsed.status === 429) {
+                        appendAssistant('Too many image identifications, try again later.');
+                    } else if (parsed.status === 502) {
+                        appendAssistant("I couldn't analyze this image right now, try again later.");
+                    } else if (!parsed.body) {
+                        appendAssistant("I wasn't able to identify the movie/show from this image.");
+                    } else {
+                        appendAssistant(formatIdentification(parsed.body));
+                    }
+                })
+                .catch(function () {
+                    setLoading(false);
+                    appendAssistant("I couldn't analyze this image right now, try again later.");
+                });
+        };
+        reader.readAsDataURL(file);
+    }
+
     function openPanel() {
         isOpen = true;
         panel.classList.remove('hidden');
@@ -221,6 +284,20 @@
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
     if (overlay) overlay.addEventListener('click', closePanel);
     if (clearBtn) clearBtn.addEventListener('click', clearMessages);
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files && fileInput.files[0]) uploadImage(fileInput.files[0]);
+            fileInput.value = '';
+        });
+    }
+    ['dragover', 'dragenter'].forEach(function (evt) {
+        panel.addEventListener(evt, function (e) { e.preventDefault(); });
+    });
+    panel.addEventListener('drop', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) uploadImage(e.dataTransfer.files[0]);
+    });
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
