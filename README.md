@@ -96,3 +96,5 @@ Cause: system `JAVA_HOME` points to JDK 26 (`C:\Projects\HOME\jdk-26.0.2.1`), bu
 cd \llama-cpp
 llama-server.exe -m "models/gemma-4-E2B_q4_0-it.gguf" --port 9000
 llama-server.exe -m "models/cardvault-500m-f16.gguf" --mmproj "models\cardvault-500m-mmproj-f16.gguf" --port 9001 --n-gpu-layers 99
+
+https://www.coverwhiz.com/

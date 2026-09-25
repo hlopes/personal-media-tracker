@@ -1,0 +1,3 @@
+# Chat image upload as multipart REST, not WS-binary
+
+The Copilot panel keeps text streaming over WS `/chatbot`, but image upload goes via a separate `POST /api/chat/image` multipart endpoint (`@RestForm("image") FileUpload`). We chose multipart REST instead of WS-binary/base64 because Quarkus REST natively streams uploads to temp files with size/content-type validation, JWT cookie auth reuses the existing `JwtCookieFilter`, and failure modes (413/415/429/502) map cleanly to HTTP; WS-binary would have complicated `ChatbotWebSocket` framing, backpressure and auth. The JS client renders the REST result as an assistant message in the same `#chatbot-messages` stream.
