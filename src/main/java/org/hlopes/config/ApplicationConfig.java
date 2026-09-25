@@ -14,6 +14,8 @@ public interface ApplicationConfig {
 
     Tmdb tmdb();
 
+    Vision vision();
+
     interface Verification {
 
         @WithDefault("24")
@@ -44,6 +46,18 @@ public interface ApplicationConfig {
         String imageBaseUrl();
 
         @WithDefault("3S")
+        Duration timeout();
+    }
+
+    interface Vision {
+
+        @WithDefault("http://localhost:9001/v1")
+        String baseUrl();
+
+        @WithDefault("vision")
+        String modelName();
+
+        @WithDefault("30S")
         Duration timeout();
     }
 }

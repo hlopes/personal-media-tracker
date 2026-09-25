@@ -67,3 +67,7 @@ _Avoid_: Watched as status value, finished
 **Catalog**:
 The external source of truth for searchable works (TMDB in phase 2), queried server-side via a proxied search and detail. The system never stores Catalog credentials in the browser.
 _Avoid_: Provider, API as domain term
+
+**Image Identification**:
+An attempt to match an image uploaded in the Copilot chat to a single `MediaItem` (`MOVIE` or `TV_SERIES`). A high-confidence match yields title, year, `MediaType` and a brief description; otherwise the system states it could not identify the work.
+_Avoid_: Guess, OCR, recognition as synonym
