@@ -2,6 +2,7 @@ package org.hlopes.aiinfusion.services;
 
 import dev.langchain4j.service.SystemMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import io.smallrye.mutiny.Multi;
 import jakarta.enterprise.context.SessionScoped;
 
@@ -26,6 +27,9 @@ public interface AIAssistant {
               state that you can only assist with movie and TV-related topics and invite
               them to ask something about entertainment or their watchlist.
         3. Keep responses conversational, concise, and helpful.
+        4. When you need factual background on a title, person, or historical context,
+              use the Wikipedia tools (wikipedia_search, wikipedia_get_summary, wikipedia_get_article).
      """)
+    @McpToolBox("wikipedia")
     Multi<String> chat(String userMessage);
 }
