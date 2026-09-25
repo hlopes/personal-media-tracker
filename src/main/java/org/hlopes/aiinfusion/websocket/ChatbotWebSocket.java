@@ -2,6 +2,7 @@ package org.hlopes.aiinfusion.websocket;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hlopes.aiinfusion.services.AIAssistant;
+import org.hlopes.aiinfusion.tools.AssistantSession;
 
 import io.quarkus.logging.Log;
 import io.quarkus.websockets.next.OnClose;
@@ -46,8 +47,11 @@ public class ChatbotWebSocket {
 
         Log.debugf("Chatbot WS message from %s (%s): %s", connection.id(), jwt.getSubject(), trimmed);
 
+        // Identity comes from the JWT only, never from the model (ADR 0007)
+        AssistantSession session = new AssistantSession(connection.id(), jwt.getSubject());
+
         return aiAssistant
-                .chat(trimmed)
+                .chat(session, trimmed)
                 .onFailure()
                 .invoke(e -> Log.errorf(e, "Chatbot WS stream error for %s", connection.id()))
                 .onFailure()
