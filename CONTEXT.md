@@ -41,28 +41,32 @@ The association between a `User` and a `Season` indicating the whole `Season` ha
 _Avoid_: Watched season as entity name, viewing log
 
 **Library Entry**:
-The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `watchlist`.
+The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `WATCHLIST`; the Assistant can do the same on the User's explicit request.
 _Avoid_: Collection item, log, backlog entry
 
 **Status**:
-The consumption state of a Library Entry: `watchlist`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. For a `Movie` it is set directly; for a `TV Series` it is derived from `Season Watch` progress (`0` watched → `watchlist`, `some` → `IN_PROGRESS`, `all` counted seasons watched → `COMPLETED`). `DROPPED`/`ON_HOLD` remain manually set. Removal hard-deletes the entry and its `Season Watch` rows regardless of status.
+The consumption state of a Library Entry: `WATCHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. For a `Movie` it is set directly; for a `TV Series` it is derived from `Season Watch` progress (`0` watched → `WATCHLIST`, `some` → `IN_PROGRESS`, `all` counted seasons watched → `COMPLETED`). `DROPPED`/`ON_HOLD` remain manually set. Removal hard-deletes the entry and its `Season Watch` rows regardless of status.
 _Avoid_: State, stage
 
-**watchlist**:
-The filtered view of a User's Library Entries where `status = watchlist`. The UI term "Backlog" maps to this view.
-_Avoid_: Backlog as separate concept, watchlist
+**Watchlist**:
+The filtered view of a User's Library Entries where `status = WATCHLIST`. The UI term "Backlog" maps to this view.
+_Avoid_: Watch list, to-watch, Backlog as separate concept
 
 **Watched**:
 The filtered view of a User's Library Entries where `status = COMPLETED`. For a `Movie` it is always paired with a `Rating`; for a `TV Series` `Rating` lives per `Season Watch` and `Library Entry` `Rating` is optional. The UI label "Watched" maps to `COMPLETED`; "Completed" is the domain term.
 _Avoid_: Watched as separate entity, history, seen
 
 **Rating**:
-An integer 1–5 representing the User's 5-star assessment. For a `Movie` `Library Entry` it is required when `status = COMPLETED` and forbidden when `watchlist`; for a `TV Series` it is attached per `Season Watch` (nullable 1–5) and is optional at the `Library Entry` when `Season Watch` rows exist, but remains required for a one-shot series mark without seasons. `Rating` is mutable via update and rendered as stars.
+An integer 1–5 representing the User's 5-star assessment. For a `Movie` `Library Entry` it is required when `status = COMPLETED` and forbidden when `WATCHLIST`; for a `TV Series` it is attached per `Season Watch` (nullable 1–5) and is optional at the `Library Entry` when `Season Watch` rows exist, but remains required for a one-shot series mark without seasons. `Rating` is mutable via update and rendered as stars.
 _Avoid_: Vote, score, stars as domain term (stars is presentation)
 
 **Completed**:
 The `Status` value indicating a `Library Entry` has been consumed (watched). For a `Movie` a `Completed` entry must carry a `Rating` 1–5; for a `TV Series` with `Season Watch` rows the series `Rating` is optional and per-season `Rating`s are used.
 _Avoid_: Watched as status value, finished
+
+**Assistant**:
+The conversational agent that answers entertainment questions and may act on the authenticated User's Library on their explicit request. Currently its only action is adding a MediaItem to the User's Watchlist; it never acts on another User's Library.
+_Avoid_: Chatbot, AI, bot
 
 **Catalog**:
 The external source of truth for searchable works (TMDB in phase 2), queried server-side via a proxied search and detail. The system never stores Catalog credentials in the browser.
