@@ -2,6 +2,7 @@ package org.hlopes.library.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.hlopes.auth.entity.User;
@@ -124,6 +125,19 @@ public class LibraryService {
                 mediaItem.releaseDate);
 
         return new LibraryEntryResponse(entry.id, entry.status.name(), mediaItemDto, entry.createdAt, entry.rating);
+    }
+
+    public Optional<StatusEnum> findStatus(String email, UUID mediaItemId) {
+        String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+        User user = userRepository
+                .findByEmail(normalizedEmail)
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("error", "user not found"))
+                        .build()));
+
+        return libraryEntryRepository
+                .findByUserIdAndMediaItemId(user.id, mediaItemId)
+                .map(e -> e.status);
     }
 
     public List<LibraryEntryResponse> list(String email, String statusParam, int page, int size) {
