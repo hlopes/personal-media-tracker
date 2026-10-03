@@ -23,7 +23,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -31,20 +30,24 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class SeasonWatchService {
 
-    @Inject
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final TvSeasonRepository tvSeasonRepository;
+    private final TvEpisodeRepository tvEpisodeRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    TvSeasonRepository tvSeasonRepository;
-
-    @Inject
-    TvEpisodeRepository tvEpisodeRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public SeasonWatchService(
+            UserRepository userRepository,
+            LibraryEntryRepository libraryEntryRepository,
+            TvSeasonRepository tvSeasonRepository,
+            TvEpisodeRepository tvEpisodeRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.userRepository = userRepository;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.tvSeasonRepository = tvSeasonRepository;
+        this.tvEpisodeRepository = tvEpisodeRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     public List<SeasonProgressResponse> getSeasonsProgress(String email, UUID libraryEntryId) {
         User user = requireUser(email);
@@ -55,7 +58,7 @@ public class SeasonWatchService {
         for (TvSeason s : seasons) {
             var watchOpt = seasonWatchRepository.findByUserIdAndSeasonId(user.id, s.id);
             boolean watched = watchOpt.isPresent();
-            Integer rating = watchOpt.map(w -> w.rating).orElse(null);
+            Short rating = watchOpt.map(w -> w.rating).orElse(null);
             Instant watchedAt = watchOpt.map(w -> w.watchedAt).orElse(null);
             int episodeCount = s.episodeCount != null
                     ? s.episodeCount
@@ -120,7 +123,7 @@ public class SeasonWatchService {
     }
 
     @Transactional
-    public SeasonWatchResponse watchSeason(String email, UUID libraryEntryId, int seasonNumber, Integer rating) {
+    public SeasonWatchResponse watchSeason(String email, UUID libraryEntryId, int seasonNumber, Short rating) {
         User user = requireUser(email);
         LibraryEntry entry = requireLibraryEntry(user, libraryEntryId);
         TvSeason season = tvSeasonRepository
@@ -198,7 +201,7 @@ public class SeasonWatchService {
     }
 
     @Transactional
-    public SeasonWatchResponse updateSeasonWatch(String email, UUID libraryEntryId, int seasonNumber, Integer rating) {
+    public SeasonWatchResponse updateSeasonWatch(String email, UUID libraryEntryId, int seasonNumber, Short rating) {
         User user = requireUser(email);
         LibraryEntry entry = requireLibraryEntry(user, libraryEntryId);
         TvSeason season = tvSeasonRepository
@@ -212,6 +215,7 @@ public class SeasonWatchService {
                     .entity(Map.of("error", "rating must be between 1 and 5"))
                     .build());
         }
+
         validateRating(rating);
         SeasonWatch watch = seasonWatchRepository
                 .findByUserIdAndSeasonId(user.id, season.id)
@@ -268,7 +272,7 @@ public class SeasonWatchService {
         return entry;
     }
 
-    private void validateRating(Integer rating) {
+    private void validateRating(Short rating) {
         if (rating != null && (rating < 1 || rating > 5)) {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("error", "rating must be between 1 and 5"))
@@ -288,7 +292,7 @@ public class SeasonWatchService {
         StatusEnum newStatus;
 
         if (watched == 0) {
-            newStatus = StatusEnum.WISHLIST;
+            newStatus = StatusEnum.WATCHLIST;
         } else if (watched >= total) {
             newStatus = StatusEnum.COMPLETED;
         } else {
@@ -298,7 +302,7 @@ public class SeasonWatchService {
         if (entry.status != newStatus) {
             entry.status = newStatus;
 
-            if (newStatus == StatusEnum.WISHLIST) {
+            if (newStatus == StatusEnum.WATCHLIST) {
                 entry.rating = null;
             }
             libraryEntryRepository.persist(entry);

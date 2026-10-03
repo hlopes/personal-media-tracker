@@ -24,7 +24,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
@@ -39,29 +38,33 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class MediaDetailResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final ApplicationConfig applicationConfig;
+    private final AuthService authService;
+    private final CatalogService catalogService;
+    private final TvSeasonService tvSeasonService;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    ApplicationConfig applicationConfig;
-
-    @Inject
-    AuthService authService;
-
-    @Inject
-    CatalogService catalogService;
-
-    @Inject
-    TvSeasonService tvSeasonService;
-
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public MediaDetailResource(
+            JsonWebToken jwt,
+            ApplicationConfig applicationConfig,
+            AuthService authService,
+            CatalogService catalogService,
+            TvSeasonService tvSeasonService,
+            LibraryEntryRepository libraryEntryRepository,
+            MediaItemRepository mediaItemRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.jwt = jwt;
+        this.applicationConfig = applicationConfig;
+        this.authService = authService;
+        this.catalogService = catalogService;
+        this.tvSeasonService = tvSeasonService;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     @GET
     @Path("{type}/{id}")
@@ -117,10 +120,10 @@ public class MediaDetailResource {
                                 mediaItem.releaseDate);
 
                         var user = authService.getUserOrNull(email);
-                        boolean alreadyInWishlist = false;
+                        boolean alreadyInwatchlist = false;
                         boolean alreadyInWatched = false;
                         String currentStatus = null;
-                        Integer currentRating = null;
+                        Short currentRating = null;
                         UUID currentEntryId = null;
 
                         if (user != null) {
@@ -131,7 +134,7 @@ public class MediaDetailResource {
                                 currentStatus = en.status.name();
                                 currentRating = en.rating;
                                 currentEntryId = en.id;
-                                alreadyInWishlist = en.status == StatusEnum.WISHLIST;
+                                alreadyInwatchlist = en.status == StatusEnum.WATCHLIST;
                                 alreadyInWatched = en.status == StatusEnum.COMPLETED;
                             }
                         }
@@ -152,7 +155,7 @@ public class MediaDetailResource {
                                 posterUrl,
                                 backdropUrl,
                                 imageBase,
-                                alreadyInWishlist,
+                                alreadyInwatchlist,
                                 alreadyInWatched,
                                 currentStatus,
                                 currentRating,
@@ -186,10 +189,10 @@ public class MediaDetailResource {
                 mediaItemDto.backdropPath() != null ? imageBase + "/w1280" + mediaItemDto.backdropPath() : null;
 
         var user = authService.getUserOrNull(email);
-        boolean alreadyInWishlist = false;
+        boolean alreadyInwatchlist = false;
         boolean alreadyInWatched = false;
         String currentStatus = null;
-        Integer currentRating = null;
+        Short currentRating = null;
         UUID currentEntryId = null;
 
         if (user != null) {
@@ -200,7 +203,7 @@ public class MediaDetailResource {
                 currentStatus = e.status.name();
                 currentRating = e.rating;
                 currentEntryId = e.id;
-                alreadyInWishlist = e.status == StatusEnum.WISHLIST;
+                alreadyInwatchlist = e.status == StatusEnum.WATCHLIST;
                 alreadyInWatched = e.status == StatusEnum.COMPLETED;
             }
         }
@@ -223,7 +226,7 @@ public class MediaDetailResource {
                 posterUrl,
                 backdropUrl,
                 imageBase,
-                alreadyInWishlist,
+                alreadyInwatchlist,
                 alreadyInWatched,
                 currentStatus,
                 currentRating,
@@ -268,7 +271,7 @@ public class MediaDetailResource {
             }
             var watch = watchMap.get(sw.season().id());
             boolean watched = watch != null;
-            Integer rating = watched ? watch.rating : null;
+            Short rating = watched ? watch.rating : null;
             var watchedAt = watched ? watch.watchedAt : null;
             result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watched, rating, watchedAt));
         }

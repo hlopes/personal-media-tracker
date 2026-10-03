@@ -9,7 +9,6 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -18,11 +17,13 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.TEXT_HTML)
 public class PageResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final Template app;
 
-    @Inject
-    Template app;
+    public PageResource(JsonWebToken jwt, Template app) {
+        this.jwt = jwt;
+        this.app = app;
+    }
 
     @GET
     @PermitAll

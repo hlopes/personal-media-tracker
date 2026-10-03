@@ -1,6 +1,6 @@
 # Personal Media Tracker — 0.2.0 (Quarkus + Postgres + Qute)
 
-REST API + server-rendered auth pages for tracking movies, TV shows, video games (phase 2). `0.2.0` adds Qute login/register with pure Tailwind CDN (sharp/clean, no gradients) on top of `1.0.0` skeleton.
+REST API + server-rendered auth pages for tracking movies, TV shows. `0.2.0` adds Qute login/register with pure Tailwind CDN (sharp/clean, no gradients) on top of `1.0.0` skeleton.
 
 ## Stack (per request)
 
@@ -68,7 +68,7 @@ curl http://localhost:8080/api/me -H "Authorization: Bearer <jwt>"
 
 ## Next phases (not in this iteration)
 
-- MediaItem / Library Entry / Status (movies, TV, games), Google OAuth deferred (add `POST /api/auth/google` ID-token exchange later), refresh tokens, roles beyond `User`.
+- MediaItem / Library Entry / Status (movies, TV), Google OAuth deferred (add `POST /api/auth/google` ID-token exchange later), refresh tokens, roles beyond `User`.
 
 ## Packaging
 
@@ -92,3 +92,7 @@ Cause: system `JAVA_HOME` points to JDK 26 (`C:\Projects\HOME\jdk-26.0.2.1`), bu
 **Docker `Please configure the datasource URL ... or ensure the Docker daemon is up`**
 
 `docker ps` must succeed. Start Docker Desktop: `Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"` then retry.
+
+
+llama-server.exe -m "models/gemma-4-E2B_q4_0-it.gguf" --port 9000
+llama-server.exe -m "models/cardvault-500m-f16.gguf" --mmproj "models\cardvault-500m-mmproj-f16.gguf" --port 9001 --n-gpu-layers 99

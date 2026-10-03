@@ -13,5 +13,5 @@ public record SeasonProgressResponse(
         LocalDate airDate,
         int episodeCount,
         boolean watched,
-        Integer rating,
+        Short rating,
         Instant watchedAt) {}

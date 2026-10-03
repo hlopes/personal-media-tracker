@@ -9,7 +9,6 @@ import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
@@ -17,30 +16,30 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.TEXT_HTML)
 public class PageResource {
 
-    @Inject
-    ApplicationConfig applicationConfig;
+    private final JsonWebToken jwt;
+    private final ApplicationConfig applicationConfig;
+    private final AuthService authService;
+    private final Template auth_login;
+    private final Template auth_register;
+    private final Template auth_verification_sent;
+    private final Template authVerifyResult;
 
-    @Inject
-    JsonWebToken jwt;
-
-    @Inject
-    AuthService authService;
-
-    @Inject
-    @Location("auth/login")
-    Template auth_login;
-
-    @Inject
-    @Location("auth/register")
-    Template auth_register;
-
-    @Inject
-    @Location("auth/verification-sent")
-    Template auth_verification_sent;
-
-    @Inject
-    @Location("auth/verify-result")
-    Template authVerifyResult;
+    public PageResource(
+            JsonWebToken jwt,
+            ApplicationConfig applicationConfig,
+            AuthService authService,
+            @Location("auth/login") Template auth_login,
+            @Location("auth/register") Template auth_register,
+            @Location("auth/verification-sent") Template auth_verification_sent,
+            @Location("auth/verify-result") Template authVerifyResult) {
+        this.jwt = jwt;
+        this.applicationConfig = applicationConfig;
+        this.authService = authService;
+        this.auth_login = auth_login;
+        this.auth_register = auth_register;
+        this.auth_verification_sent = auth_verification_sent;
+        this.authVerifyResult = authVerifyResult;
+    }
 
     @GET
     @Path("/login")

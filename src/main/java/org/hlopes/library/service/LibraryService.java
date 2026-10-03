@@ -17,7 +17,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -25,17 +24,21 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class LibraryService {
 
-    @Inject
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public LibraryService(
+            UserRepository userRepository,
+            MediaItemRepository mediaItemRepository,
+            LibraryEntryRepository libraryEntryRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.userRepository = userRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     @Transactional
     public LibraryEntryResponse add(String email, Long externalId, String rawMediaType) {
@@ -44,7 +47,7 @@ public class LibraryService {
 
     @Transactional
     public LibraryEntryResponse add(
-            String email, Long externalId, String rawMediaType, String rawStatus, Integer rating) {
+            String email, Long externalId, String rawMediaType, String rawStatus, Short rating) {
         String normalizedEmail = email == null ? null : email.trim().toLowerCase();
         User user = userRepository
                 .findByEmail(normalizedEmail)
@@ -65,7 +68,7 @@ public class LibraryService {
                     .build());
         }
 
-        StatusEnum status = StatusEnum.WISHLIST;
+        StatusEnum status = StatusEnum.WATCHLIST;
 
         if (rawStatus != null && !rawStatus.isBlank()) {
             try {
@@ -100,7 +103,7 @@ public class LibraryService {
         }
 
         if (libraryEntryRepository.existsByUserIdAndMediaItemId(user.id, mediaItem.id)) {
-            String msg = status == StatusEnum.COMPLETED ? "already in library" : "already in wishlist";
+            String msg = status == StatusEnum.COMPLETED ? "already in library" : "already in watchlist";
             throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                     .entity(Map.of("error", msg))
                     .build());
@@ -134,7 +137,7 @@ public class LibraryService {
                         .entity(Map.of("error", "user not found"))
                         .build()));
 
-        StatusEnum status = StatusEnum.WISHLIST;
+        StatusEnum status = StatusEnum.WATCHLIST;
 
         if (statusParam != null && !statusParam.isBlank()) {
             try {
@@ -177,7 +180,7 @@ public class LibraryService {
                         .entity(Map.of("error", "user not found"))
                         .build()));
 
-        StatusEnum status = StatusEnum.WISHLIST;
+        StatusEnum status = StatusEnum.WATCHLIST;
 
         if (statusParam != null && !statusParam.isBlank()) {
             try {
@@ -235,7 +238,7 @@ public class LibraryService {
     }
 
     @Transactional
-    public LibraryEntryResponse update(String email, UUID entryId, String rawStatus, Integer rating) {
+    public LibraryEntryResponse update(String email, UUID entryId, String rawStatus, Short rating) {
         String normalizedEmail = email == null ? null : email.trim().toLowerCase();
         User user = userRepository
                 .findByEmail(normalizedEmail)
@@ -262,7 +265,7 @@ public class LibraryService {
             }
         }
 
-        Integer targetRating = rating;
+        Short targetRating = rating;
         boolean ratingProvided = rating != null;
 
         if (!ratingProvided && !statusProvided) {
@@ -295,7 +298,7 @@ public class LibraryService {
             }
             if (targetStatus == StatusEnum.COMPLETED) {
                 targetRating = entry.rating;
-            } else if (targetStatus == StatusEnum.WISHLIST) {
+            } else if (targetStatus == StatusEnum.WATCHLIST) {
                 targetRating = null;
             } else {
                 targetRating = entry.rating;
@@ -349,7 +352,7 @@ public class LibraryService {
         libraryEntryRepository.delete(entry);
     }
 
-    private void validateRatingForStatus(StatusEnum status, MediaTypeEnum mediaType, Integer rating) {
+    private void validateRatingForStatus(StatusEnum status, MediaTypeEnum mediaType, Short rating) {
         if (status == StatusEnum.COMPLETED) {
             if (mediaType == MediaTypeEnum.TV_SERIES) {
                 // TV Series: rating optional when granular watches exist, but if provided must be 1-5
@@ -385,10 +388,10 @@ public class LibraryService {
                         .entity(Map.of("error", "rating must be between 1 and 5"))
                         .build());
             }
-        } else if (status == StatusEnum.WISHLIST) {
+        } else if (status == StatusEnum.WATCHLIST) {
             if (rating != null) {
                 throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                        .entity(Map.of("error", "rating not allowed for WISHLIST"))
+                        .entity(Map.of("error", "rating not allowed for WATCHLIST"))
                         .build());
             }
         } else {

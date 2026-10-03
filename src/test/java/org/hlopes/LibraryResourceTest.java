@@ -37,11 +37,11 @@ public class LibraryResourceTest {
     }
 
     @Test
-    public void testWishlistPageRequiresAuth() {
+    public void testwatchlistPageRequiresAuth() {
         given().redirects()
                 .follow(false)
                 .when()
-                .get("/wishlist")
+                .get("/watchlist")
                 .then()
                 .statusCode(303)
                 .header("Location", containsString("/login"));

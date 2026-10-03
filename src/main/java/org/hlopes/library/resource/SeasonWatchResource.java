@@ -12,7 +12,6 @@ import org.hlopes.library.dto.SeasonWatchResponse;
 import org.hlopes.library.service.SeasonWatchService;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -23,11 +22,13 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class SeasonWatchResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final SeasonWatchService seasonWatchService;
 
-    @Inject
-    SeasonWatchService seasonWatchService;
+    public SeasonWatchResource(JsonWebToken jwt, SeasonWatchService seasonWatchService) {
+        this.jwt = jwt;
+        this.seasonWatchService = seasonWatchService;
+    }
 
     @GET
     @Path("/{id}/seasons")
@@ -51,7 +52,8 @@ public class SeasonWatchResource {
             @PathParam("seasonNumber") int seasonNumber,
             SeasonWatchRequest request) {
         String email = jwt.getSubject();
-        Integer rating = request == null ? null : request.rating();
+        Short rating = request == null ? null : request.rating();
+
         return seasonWatchService.watchSeason(email, libraryEntryId, seasonNumber, rating);
     }
 
@@ -68,6 +70,7 @@ public class SeasonWatchResource {
                     .entity(Map.of("error", "rating must be between 1 and 5"))
                     .build());
         }
+
         return seasonWatchService.updateSeasonWatch(email, libraryEntryId, seasonNumber, request.rating());
     }
 

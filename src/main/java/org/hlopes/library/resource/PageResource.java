@@ -26,7 +26,6 @@ import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -40,36 +39,38 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.TEXT_HTML)
 public class PageResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final AuthService authService;
+    private final LibraryService libraryService;
+    private final TvSeasonService tvSeasonService;
+    private final SeasonWatchRepository seasonWatchRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final Template watchlist;
+    private final Template watched;
 
-    @Inject
-    AuthService authService;
-
-    @Inject
-    LibraryService libraryService;
-
-    @Inject
-    TvSeasonService tvSeasonService;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
-
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    @Location("library/wishlist")
-    Template wishlist;
-
-    @Inject
-    @Location("library/watched")
-    Template watched;
+    public PageResource(
+            JsonWebToken jwt,
+            AuthService authService,
+            LibraryService libraryService,
+            TvSeasonService tvSeasonService,
+            SeasonWatchRepository seasonWatchRepository,
+            MediaItemRepository mediaItemRepository,
+            @Location("library/watchlist") Template watchlist,
+            @Location("library/watched") Template watched) {
+        this.jwt = jwt;
+        this.authService = authService;
+        this.libraryService = libraryService;
+        this.tvSeasonService = tvSeasonService;
+        this.seasonWatchRepository = seasonWatchRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.watchlist = watchlist;
+        this.watched = watched;
+    }
 
     @GET
-    @Path("wishlist")
+    @Path("watchlist")
     @PermitAll
-    public Response getWishlist(
+    public Response getWatchlist(
             @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("20") int size) {
         try {
             String email = jwt != null ? jwt.getSubject() : null;
@@ -78,20 +79,20 @@ public class PageResource {
                 throw new NotAuthorizedException("Not logged in");
             }
 
-            var entries = libraryService.list(email, "WISHLIST", page, size);
-            long total = libraryService.count(email, "WISHLIST");
+            var entries = libraryService.list(email, "WATCHLIST", page, size);
+            long total = libraryService.count(email, "WATCHLIST");
 
             TemplateInstance instance =
-                    wishlist.data("entries", entries).data("total", total).data("currentUser", email);
+                    watchlist.data("entries", entries).data("total", total).data("currentUser", email);
 
             return Response.ok(instance).build();
 
         } catch (NotAuthorizedException e) {
-            String msg = URLEncoder.encode("Please login to view wishlist", StandardCharsets.UTF_8);
+            String msg = URLEncoder.encode("Please login to view watchlist", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/login?error=" + msg)).build();
         } catch (Exception e) {
-            String msg = URLEncoder.encode("Failed to load wishlist", StandardCharsets.UTF_8);
+            String msg = URLEncoder.encode("Failed to load watchlist", StandardCharsets.UTF_8);
 
             return Response.seeOther(URI.create("/?error=" + msg)).build();
         }
@@ -175,6 +176,7 @@ public class PageResource {
         if (mediaItemDto == null || mediaItemDto.id() == null) {
             return List.of();
         }
+
         UUID mediaItemId = mediaItemDto.id();
         Map<UUID, SeasonWatch> watchMap = Map.of();
 
@@ -189,6 +191,7 @@ public class PageResource {
             }
         } catch (Exception ignored) {
         }
+
         List<EnrichedSeasonDto> result = new ArrayList<>();
 
         for (SeasonWithEpisodesDto sw : rawSeasons) {
@@ -207,7 +210,7 @@ public class PageResource {
             }
 
             var watch = watchMap.get(sw.season().id());
-            Integer rating = watch != null ? watch.rating : null;
+            Short rating = watch != null ? watch.rating : null;
             var watchedAt = watch != null ? watch.watchedAt : null;
 
             result.add(new EnrichedSeasonDto(sw.season(), enrichedEps, watch != null, rating, watchedAt));

@@ -5,4 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TmdbCrewMember(
-        Long id, String name, String job, String department, @JsonProperty("profile_path") String profilePath) {}
+        Long id,
+        String name,
+        String job,
+        String department,
+        @JsonProperty("profile_path") String profilePath) {}

@@ -13,21 +13,22 @@ import org.hlopes.library.dto.UpdateLibraryRequest;
 import org.hlopes.library.service.LibraryService;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("/api/me/library")
-@Tag(name = "Library", description = "Personal Wishlist — Library Entry management")
+@Tag(name = "Library", description = "Personal watchlist — Library Entry management")
 public class LibraryResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final LibraryService libraryService;
 
-    @Inject
-    LibraryService libraryService;
+    public LibraryResource(JsonWebToken jwt, LibraryService libraryService) {
+        this.jwt = jwt;
+        this.libraryService = libraryService;
+    }
 
     @POST
     @RolesAllowed("User")
@@ -61,7 +62,7 @@ public class LibraryResource {
     @RolesAllowed("User")
     @Produces(MediaType.APPLICATION_JSON)
     public PaginatedLibraryResponse list(
-            @QueryParam("status") @DefaultValue("WISHLIST") String status,
+            @QueryParam("status") @DefaultValue("WATCHLIST") String status,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
         String email = jwt.getSubject();

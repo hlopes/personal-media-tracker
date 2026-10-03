@@ -11,11 +11,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class JwtService {
 
-    @ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "mediashelf")
-    String issuer;
+    private final String issuer;
+    private final long lifespanSeconds;
 
-    @ConfigProperty(name = "smallrye.jwt.new-token.lifespan", defaultValue = "3600")
-    long lifespanSeconds;
+    public JwtService(
+            @ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "mediashelf") String issuer,
+            @ConfigProperty(name = "smallrye.jwt.new-token.lifespan", defaultValue = "3600") long lifespanSeconds) {
+        this.issuer = issuer;
+        this.lifespanSeconds = lifespanSeconds;
+    }
 
     public String generateToken(String email) {
         return Jwt.issuer(issuer)

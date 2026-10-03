@@ -1,6 +1,6 @@
 # Personal Media Tracker
 
-A personal system for tracking consumption of movies and TV shows across a full lifecycle (wishlist → in progress → completed).
+A personal system for tracking consumption of movies and TV shows across a full lifecycle (watchlist → in progress → completed).
 
 ## Language
 
@@ -41,15 +41,15 @@ The association between a `User` and a `Season` indicating the whole `Season` ha
 _Avoid_: Watched season as entity name, viewing log
 
 **Library Entry**:
-The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `WISHLIST`.
+The association between a User and a MediaItem, holding the User-specific lifecycle state. In phase 2, adding from the detail page creates a Library Entry with `watchlist`.
 _Avoid_: Collection item, log, backlog entry
 
 **Status**:
-The consumption state of a Library Entry: `WISHLIST`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. For a `Movie` it is set directly; for a `TV Series` it is derived from `Season Watch` progress (`0` watched → `WISHLIST`, `some` → `IN_PROGRESS`, `all` counted seasons watched → `COMPLETED`). `DROPPED`/`ON_HOLD` remain manually set. Removal hard-deletes the entry and its `Season Watch` rows regardless of status.
+The consumption state of a Library Entry: `watchlist`, `IN_PROGRESS`, `COMPLETED`, `DROPPED`, `ON_HOLD`. For a `Movie` it is set directly; for a `TV Series` it is derived from `Season Watch` progress (`0` watched → `watchlist`, `some` → `IN_PROGRESS`, `all` counted seasons watched → `COMPLETED`). `DROPPED`/`ON_HOLD` remain manually set. Removal hard-deletes the entry and its `Season Watch` rows regardless of status.
 _Avoid_: State, stage
 
-**Wishlist**:
-The filtered view of a User's Library Entries where `status = WISHLIST`. The UI term "Backlog" maps to this view.
+**watchlist**:
+The filtered view of a User's Library Entries where `status = watchlist`. The UI term "Backlog" maps to this view.
 _Avoid_: Backlog as separate concept, watchlist
 
 **Watched**:
@@ -57,7 +57,7 @@ The filtered view of a User's Library Entries where `status = COMPLETED`. For a 
 _Avoid_: Watched as separate entity, history, seen
 
 **Rating**:
-An integer 1–5 representing the User's 5-star assessment. For a `Movie` `Library Entry` it is required when `status = COMPLETED` and forbidden when `WISHLIST`; for a `TV Series` it is attached per `Season Watch` (nullable 1–5) and is optional at the `Library Entry` when `Season Watch` rows exist, but remains required for a one-shot series mark without seasons. `Rating` is mutable via update and rendered as stars.
+An integer 1–5 representing the User's 5-star assessment. For a `Movie` `Library Entry` it is required when `status = COMPLETED` and forbidden when `watchlist`; for a `TV Series` it is attached per `Season Watch` (nullable 1–5) and is optional at the `Library Entry` when `Season Watch` rows exist, but remains required for a one-shot series mark without seasons. `Rating` is mutable via update and rendered as stars.
 _Avoid_: Vote, score, stars as domain term (stars is presentation)
 
 **Completed**:

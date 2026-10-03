@@ -13,7 +13,6 @@ import org.hlopes.config.ApplicationConfig;
 
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
@@ -22,23 +21,27 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class AuthService {
 
-    @Inject
-    ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
+    private final UserRepository userRepository;
+    private final PasswordService passwordService;
+    private final JwtService jwtService;
+    private final EmailService emailService;
+    private final UserMapper userMapper;
 
-    @Inject
-    UserRepository userRepository;
-
-    @Inject
-    PasswordService passwordService;
-
-    @Inject
-    JwtService jwtService;
-
-    @Inject
-    EmailService emailService;
-
-    @Inject
-    UserMapper userMapper;
+    public AuthService(
+            ApplicationConfig applicationConfig,
+            UserRepository userRepository,
+            PasswordService passwordService,
+            JwtService jwtService,
+            EmailService emailService,
+            UserMapper userMapper) {
+        this.applicationConfig = applicationConfig;
+        this.userRepository = userRepository;
+        this.passwordService = passwordService;
+        this.jwtService = jwtService;
+        this.emailService = emailService;
+        this.userMapper = userMapper;
+    }
 
     public UserResponse getUserOrNotFound(String email) {
         return userRepository

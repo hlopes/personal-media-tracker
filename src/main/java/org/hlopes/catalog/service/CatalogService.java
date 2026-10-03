@@ -24,28 +24,34 @@ import org.hlopes.config.ApplicationConfig;
 
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class CatalogService {
 
-    @Inject
-    @RestClient
-    TmdbClient tmdbClient;
+    private TmdbClient tmdbClient;
 
-    @Inject
-    ApplicationConfig applicationConfig;
+    private ApplicationConfig applicationConfig;
 
-    @Inject
-    MediaItemService mediaItemService;
+    private MediaItemService mediaItemService;
 
-    @Inject
-    TvSeasonService tvSeasonService;
+    private TvSeasonService tvSeasonService;
 
-    @Inject
-    CatalogMapper catalogMapper;
+    private CatalogMapper catalogMapper;
+
+    public CatalogService(
+            @RestClient TmdbClient tmdbClient,
+            ApplicationConfig applicationConfig,
+            MediaItemService mediaItemService,
+            TvSeasonService tvSeasonService,
+            CatalogMapper catalogMapper) {
+        this.tmdbClient = tmdbClient;
+        this.applicationConfig = applicationConfig;
+        this.mediaItemService = mediaItemService;
+        this.tvSeasonService = tvSeasonService;
+        this.catalogMapper = catalogMapper;
+    }
 
     @CacheResult(cacheName = "catalog-search")
     public CatalogSearchResponse search(String query, String type, int page) {

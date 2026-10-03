@@ -6,7 +6,6 @@ import org.hlopes.catalog.dto.CatalogSearchResponse;
 import org.hlopes.catalog.service.CatalogService;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
@@ -14,8 +13,11 @@ import jakarta.ws.rs.core.MediaType;
 @Tag(name = "Catalog", description = "Search TMDB catalog (proxied, auth required)")
 public class CatalogResource {
 
-    @Inject
-    CatalogService catalogService;
+    private final CatalogService catalogService;
+
+    public CatalogResource(CatalogService catalogService) {
+        this.catalogService = catalogService;
+    }
 
     @GET
     @Path("/search")
