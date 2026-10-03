@@ -16,7 +16,6 @@ import org.hlopes.util.ErrorUtil;
 import io.quarkus.logging.Log;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
@@ -33,14 +32,15 @@ public class AuthResource {
 
     private static final String JWT_COOKIE = "jwt";
 
-    @Inject
-    AuthService authService;
+    private final JsonWebToken jwt;
+    private final AuthService authService;
+    private final UserMapper userMapper;
 
-    @Inject
-    UserMapper userMapper;
-
-    @Inject
-    JsonWebToken jwt;
+    public AuthResource(JsonWebToken jwt, AuthService authService, UserMapper userMapper) {
+        this.jwt = jwt;
+        this.authService = authService;
+        this.userMapper = userMapper;
+    }
 
     @GET
     @Path("/api/me")

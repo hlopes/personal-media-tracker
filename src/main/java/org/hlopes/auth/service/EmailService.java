@@ -6,31 +6,30 @@ import io.quarkus.logging.Log;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class EmailService {
 
-    @Inject
-    Mailer mailer;
+    private final Mailer mailer;
+    private final ApplicationConfig applicationConfig;
 
-    @Inject
-    ApplicationConfig applicationConfig;
+    public EmailService(Mailer mailer, ApplicationConfig applicationConfig) {
+        this.mailer = mailer;
+        this.applicationConfig = applicationConfig;
+    }
 
     public void sendVerificationEmail(String email, String token) {
         String baseUrl = applicationConfig.verification().baseUrl();
         String verificationLink = baseUrl + "/api/auth/verify?token=" + token;
         String subject = "Verify your email - Personal Media Tracker";
-        String body =
-                """
+        String body = """
                 Welcome to Personal Media Tracker!
 
                 Please verify your email by clicking the link below:
                 %s
 
                 This link expires in 24 hours. If you did not create an account, please ignore this email.
-                """
-                        .formatted(verificationLink);
+                """.formatted(verificationLink);
 
         // Always log for dev/Swagger testing (Q9: Mailpit + console fallback)
         Log.infof("Verification link for %s: %s", email, verificationLink);

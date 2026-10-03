@@ -24,7 +24,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
@@ -39,29 +38,33 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class MediaDetailResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final ApplicationConfig applicationConfig;
+    private final AuthService authService;
+    private final CatalogService catalogService;
+    private final TvSeasonService tvSeasonService;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    ApplicationConfig applicationConfig;
-
-    @Inject
-    AuthService authService;
-
-    @Inject
-    CatalogService catalogService;
-
-    @Inject
-    TvSeasonService tvSeasonService;
-
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public MediaDetailResource(
+            JsonWebToken jwt,
+            ApplicationConfig applicationConfig,
+            AuthService authService,
+            CatalogService catalogService,
+            TvSeasonService tvSeasonService,
+            LibraryEntryRepository libraryEntryRepository,
+            MediaItemRepository mediaItemRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.jwt = jwt;
+        this.applicationConfig = applicationConfig;
+        this.authService = authService;
+        this.catalogService = catalogService;
+        this.tvSeasonService = tvSeasonService;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     @GET
     @Path("{type}/{id}")

@@ -25,24 +25,26 @@ import org.hlopes.catalog.repository.TvSeasonRepository;
 import org.hlopes.config.ApplicationConfig;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class TvSeasonService {
 
-    @Inject
-    @RestClient
-    TmdbClient tmdbClient;
+    private final TmdbClient tmdbClient;
+    private final ApplicationConfig applicationConfig;
+    private final TvSeasonRepository seasonRepository;
+    private final TvEpisodeRepository episodeRepository;
 
-    @Inject
-    ApplicationConfig applicationConfig;
-
-    @Inject
-    TvSeasonRepository seasonRepository;
-
-    @Inject
-    TvEpisodeRepository episodeRepository;
+    public TvSeasonService(
+            @RestClient TmdbClient tmdbClient,
+            ApplicationConfig applicationConfig,
+            TvSeasonRepository seasonRepository,
+            TvEpisodeRepository episodeRepository) {
+        this.tmdbClient = tmdbClient;
+        this.applicationConfig = applicationConfig;
+        this.seasonRepository = seasonRepository;
+        this.episodeRepository = episodeRepository;
+    }
 
     private static final Duration STALENESS = Duration.ofHours(24);
 

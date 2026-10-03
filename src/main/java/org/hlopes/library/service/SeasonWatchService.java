@@ -23,7 +23,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -31,20 +30,24 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class SeasonWatchService {
 
-    @Inject
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final TvSeasonRepository tvSeasonRepository;
+    private final TvEpisodeRepository tvEpisodeRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    TvSeasonRepository tvSeasonRepository;
-
-    @Inject
-    TvEpisodeRepository tvEpisodeRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public SeasonWatchService(
+            UserRepository userRepository,
+            LibraryEntryRepository libraryEntryRepository,
+            TvSeasonRepository tvSeasonRepository,
+            TvEpisodeRepository tvEpisodeRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.userRepository = userRepository;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.tvSeasonRepository = tvSeasonRepository;
+        this.tvEpisodeRepository = tvEpisodeRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     public List<SeasonProgressResponse> getSeasonsProgress(String email, UUID libraryEntryId) {
         User user = requireUser(email);

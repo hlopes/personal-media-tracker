@@ -9,13 +9,15 @@ import io.quarkus.websockets.next.OnTextMessage;
 import io.quarkus.websockets.next.WebSocket;
 import io.quarkus.websockets.next.WebSocketConnection;
 import io.smallrye.common.annotation.RunOnVirtualThread;
-import jakarta.inject.Inject;
 
 @WebSocket(path = "/chatbot")
 public class ChatbotWebSocket {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+
+    public ChatbotWebSocket(JsonWebToken jwt) {
+        this.jwt = jwt;
+    }
 
     @OnOpen
     public void onOpen(WebSocketConnection connection) {

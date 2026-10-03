@@ -11,20 +11,23 @@ import org.hlopes.catalog.repository.TvEpisodeRepository;
 import org.hlopes.catalog.repository.TvSeasonRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class TestDataHelper {
 
-    @Inject
-    MediaItemRepository mediaItemRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final TvSeasonRepository tvSeasonRepository;
+    private final TvEpisodeRepository tvEpisodeRepository;
 
-    @Inject
-    TvSeasonRepository tvSeasonRepository;
-
-    @Inject
-    TvEpisodeRepository tvEpisodeRepository;
+    public TestDataHelper(
+            MediaItemRepository mediaItemRepository,
+            TvSeasonRepository tvSeasonRepository,
+            TvEpisodeRepository tvEpisodeRepository) {
+        this.mediaItemRepository = mediaItemRepository;
+        this.tvSeasonRepository = tvSeasonRepository;
+        this.tvEpisodeRepository = tvEpisodeRepository;
+    }
 
     @Transactional
     public MediaItem createMediaItem(Long externalId, MediaTypeEnum mediaType, String title) {

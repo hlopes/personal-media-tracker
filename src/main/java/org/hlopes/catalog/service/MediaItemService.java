@@ -10,14 +10,16 @@ import org.hlopes.catalog.entity.MediaTypeEnum;
 import org.hlopes.catalog.repository.MediaItemRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class MediaItemService {
 
-    @Inject
-    MediaItemRepository mediaItemRepository;
+    private final MediaItemRepository mediaItemRepository;
+
+    public MediaItemService(MediaItemRepository mediaItemRepository) {
+        this.mediaItemRepository = mediaItemRepository;
+    }
 
     @Transactional
     public MediaItem findOrCreateFromMovie(TmdbMovieDetails details) {

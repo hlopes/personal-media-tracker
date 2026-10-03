@@ -26,7 +26,6 @@ import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -40,31 +39,33 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.TEXT_HTML)
 public class PageResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final AuthService authService;
+    private final LibraryService libraryService;
+    private final TvSeasonService tvSeasonService;
+    private final SeasonWatchRepository seasonWatchRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final Template watchlist;
+    private final Template watched;
 
-    @Inject
-    AuthService authService;
-
-    @Inject
-    LibraryService libraryService;
-
-    @Inject
-    TvSeasonService tvSeasonService;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
-
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    @Location("library/watchlist")
-    Template watchlist;
-
-    @Inject
-    @Location("library/watched")
-    Template watched;
+    public PageResource(
+            JsonWebToken jwt,
+            AuthService authService,
+            LibraryService libraryService,
+            TvSeasonService tvSeasonService,
+            SeasonWatchRepository seasonWatchRepository,
+            MediaItemRepository mediaItemRepository,
+            @Location("library/watchlist") Template watchlist,
+            @Location("library/watched") Template watched) {
+        this.jwt = jwt;
+        this.authService = authService;
+        this.libraryService = libraryService;
+        this.tvSeasonService = tvSeasonService;
+        this.seasonWatchRepository = seasonWatchRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.watchlist = watchlist;
+        this.watched = watched;
+    }
 
     @GET
     @Path("watchlist")

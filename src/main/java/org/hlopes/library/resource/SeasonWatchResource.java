@@ -12,7 +12,6 @@ import org.hlopes.library.dto.SeasonWatchResponse;
 import org.hlopes.library.service.SeasonWatchService;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -23,11 +22,13 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class SeasonWatchResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final SeasonWatchService seasonWatchService;
 
-    @Inject
-    SeasonWatchService seasonWatchService;
+    public SeasonWatchResource(JsonWebToken jwt, SeasonWatchService seasonWatchService) {
+        this.jwt = jwt;
+        this.seasonWatchService = seasonWatchService;
+    }
 
     @GET
     @Path("/{id}/seasons")

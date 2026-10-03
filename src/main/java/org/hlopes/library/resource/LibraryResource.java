@@ -13,7 +13,6 @@ import org.hlopes.library.dto.UpdateLibraryRequest;
 import org.hlopes.library.service.LibraryService;
 
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -23,11 +22,13 @@ import jakarta.ws.rs.core.Response;
 @Tag(name = "Library", description = "Personal watchlist — Library Entry management")
 public class LibraryResource {
 
-    @Inject
-    JsonWebToken jwt;
+    private final JsonWebToken jwt;
+    private final LibraryService libraryService;
 
-    @Inject
-    LibraryService libraryService;
+    public LibraryResource(JsonWebToken jwt, LibraryService libraryService) {
+        this.jwt = jwt;
+        this.libraryService = libraryService;
+    }
 
     @POST
     @RolesAllowed("User")

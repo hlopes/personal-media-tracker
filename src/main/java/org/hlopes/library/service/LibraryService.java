@@ -17,7 +17,6 @@ import org.hlopes.library.repository.LibraryEntryRepository;
 import org.hlopes.library.repository.SeasonWatchRepository;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -25,17 +24,21 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class LibraryService {
 
-    @Inject
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final MediaItemRepository mediaItemRepository;
+    private final LibraryEntryRepository libraryEntryRepository;
+    private final SeasonWatchRepository seasonWatchRepository;
 
-    @Inject
-    MediaItemRepository mediaItemRepository;
-
-    @Inject
-    LibraryEntryRepository libraryEntryRepository;
-
-    @Inject
-    SeasonWatchRepository seasonWatchRepository;
+    public LibraryService(
+            UserRepository userRepository,
+            MediaItemRepository mediaItemRepository,
+            LibraryEntryRepository libraryEntryRepository,
+            SeasonWatchRepository seasonWatchRepository) {
+        this.userRepository = userRepository;
+        this.mediaItemRepository = mediaItemRepository;
+        this.libraryEntryRepository = libraryEntryRepository;
+        this.seasonWatchRepository = seasonWatchRepository;
+    }
 
     @Transactional
     public LibraryEntryResponse add(String email, Long externalId, String rawMediaType) {

@@ -17,7 +17,6 @@ import org.hlopes.auth.mapper.UserMapper;
 import org.hlopes.auth.service.AuthService;
 
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -32,14 +31,15 @@ import jakarta.ws.rs.core.Response;
 @Tag(name = "Helper Authentication", description = "Helpers for Register, verify email and login (JSON)")
 public class HelperResource {
 
-    @Inject
-    AuthService authService;
+    private final JsonWebToken jwt;
+    private final AuthService authService;
+    private final UserMapper userMapper;
 
-    @Inject
-    UserMapper userMapper;
-
-    @Inject
-    JsonWebToken jwt;
+    public HelperResource(JsonWebToken jwt, AuthService authService, UserMapper userMapper) {
+        this.jwt = jwt;
+        this.authService = authService;
+        this.userMapper = userMapper;
+    }
 
     @POST
     @Path("/api/helpers/auth/register")
