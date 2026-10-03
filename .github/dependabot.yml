@@ -1,0 +1,84 @@
+version: 2
+updates:
+  # Maven dependencies from pom.xml (Quarkus BOM, Lombok, MapStruct, bcrypt, plugins)
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Lisbon"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    groups:
+      quarkus-platform:
+        patterns:
+          - "io.quarkus*"
+      minor-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "io.quarkus*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker images from docker-compose.yml (pgvector/pgvector)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Lisbon"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "digest"
+
+  # Docker images from Quarkus Dockerfiles (src/main/docker/Dockerfile.*)
+  - package-ecosystem: "docker"
+    directory: "/src/main/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Lisbon"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "digest"
+
+  # GitHub Actions (future-proof once workflows are added)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Lisbon"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
