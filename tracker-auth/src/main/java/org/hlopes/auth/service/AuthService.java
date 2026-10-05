@@ -54,6 +54,16 @@ public class AuthService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    public User requireUserByEmail(String rawEmail) {
+        String email = normalizeEmail(rawEmail);
+
+        return userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("error", "user not found"))
+                        .build()));
+    }
+
     @Transactional
     public void register(String rawEmail, String rawPassword) {
         String email = normalizeEmail(rawEmail);

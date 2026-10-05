@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- PROTOTYPE — branch prototype/module-skeleton, issue #38. Throwaway: do NOT merge.
-     Shared kernel: User, Authentication, Email Verification (+ JwtCookieFilter /
-     ApplicationConfig placement still open in ticket #40). Empty until the first
-     move-train lands here. Depends on NOTHING. -->
+<!-- Train A (issue #42): auth kernel lives here — User/Authentication/Email Verification
+      (entity, repository, mapper, dto, services, AuthResource, HelperResource, JwtCookieFilter)
+      plus config/ApplicationConfig and util/ErrorUtil. Depends on NOTHING. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -12,4 +11,92 @@
     </parent>
     <artifactId>tracker-auth</artifactId>
     <name>tracker-auth :: shared kernel (User, Authentication, Email Verification)</name>
+
+    <dependencies>
+        <!-- CDI (jakarta.enterprise / jakarta.annotation) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <!-- Panache entities + repositories (brings hibernate-orm transitively) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <!-- JsonWebToken injection in resources -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-jwt</artifactId>
+        </dependency>
+        <!-- Jwt token building in JwtService -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-jwt-build</artifactId>
+        </dependency>
+        <!-- Verification emails in EmailService -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-mailer</artifactId>
+        </dependency>
+        <!-- jakarta.validation constraints on DTOs -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+        <!-- jakarta.ws.rs in resources / filter / ErrorUtil -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest</artifactId>
+        </dependency>
+        <!-- JSON serialization of DTOs -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-jackson</artifactId>
+        </dependency>
+        <!-- MicroProfile OpenAPI annotations on AuthResource / HelperResource.
+             ConfigMapping (@ConfigMapping/@WithDefault) needs no extra artifact:
+             smallrye-config-mapping arrives transitively via quarkus-arc core. -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-openapi</artifactId>
+        </dependency>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+        <!-- BCrypt for password hashing -->
+        <dependency>
+            <groupId>at.favre.lib</groupId>
+            <artifactId>bcrypt</artifactId>
+            <version>${bcrypt.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Jandex index so the runnable ui module discovers this jar's CDI beans,
+                 Panache entities and @ConfigMapping (research/quarkus-modules.md). -->
+            <plugin>
+                <groupId>io.smallrye</groupId>
+                <artifactId>jandex-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>make-index</id>
+                        <goals>
+                            <goal>jandex</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
